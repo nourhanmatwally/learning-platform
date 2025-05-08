@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+ HEAD
 node_modules
 =======
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
@@ -42,4 +42,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
->>>>>>> 0bc2e35 (Initial commit)
+ 0bc2e35 (Initial commit)

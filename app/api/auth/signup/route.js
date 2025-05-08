@@ -1,3 +1,4 @@
+/*
 import { connectToDatabase } from '../../../../lib/mongodb';
 import User from '../../../../models/User';
 import { hash } from 'bcryptjs';
@@ -31,3 +32,4 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: 'حدث خطأ، حاول مرة أخرى' }), { status: 500 });
   }
 }
+*/

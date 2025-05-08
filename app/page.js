@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { translations } from '../lib/translations';
 import { useLanguage } from '../lib/LanguageContext';
+import Image from 'next/image';
 
 export default function Home() {
   const { data: session } = useSession();
@@ -12,157 +13,226 @@ export default function Home() {
   const direction = language === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <div className="container" style={{ direction, textAlign: 'center', minHeight: 'calc(100vh - 120px)' }}>
+    <div className="container" style={{ direction, textAlign: 'center', height: 'calc(100vh - 150px)', overflow: 'auto', display: 'flex', flexDirection: 'column', padding: '20px' }}>
+      {/* Combined Container: Image Card + Welcome Message */}
       <div
-        className="welcome"
+        className="welcome-section"
         style={{
-          padding: '50px 0',
-          backgroundImage: "url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          borderRadius: '10px',
-          marginBottom: '20px',
-          color: '#3A2B1F',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-          position: 'relative',
-          // Adding a semi-transparent overlay to improve text readability
-          background: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          display: 'flex',
+          flexDirection: language === 'ar' ? 'row' : 'row-reverse',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '30px',
+          marginBottom: '30px',
+          flexWrap: 'wrap',
         }}
       >
-        <h1 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', marginBottom: '10px' }}>
+        {/* Image Card */}
+        <div
+          className="welcome-image-card"
+          style={{
+            position: 'relative',
+            width: '200px',
+            height: '200px',
+            flexShrink: 0,
+          }}
+        >
+          <Image
+            src="/background-welcome.png"
+            alt="Welcome Background"
+            layout="fill"
+            objectFit="cover"
+            style={{ borderRadius: '100px 50px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}
+          />
+        </div>
+
+        {/* Welcome Message */}
+        <div
+          className="welcome-message"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'transparent',
+            maxWidth: '500px',
+          }}
+        >
+          <h1 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', marginBottom: '8px', fontSize: '1.8em', color: '#3A2B1F' }}>
+            {session ? (
+              language === 'ar' ? (
+                <>
+                  <span>مرحبًا</span>
+                  <p style={{ margin: '4px 0', fontSize: '1.1em' }}>{session.user.name}</p>
+                </>
+              ) : (
+                <>
+                  <span>Hello</span>
+                  <p style={{ margin: '4px 0', fontSize: '1.1em' }}>{session.user.name}</p>
+                </>
+              )
+            ) : t.welcome}
+          </h1>
+          <h2 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', fontSize: '1.4em', margin: '8px 0', color: '#3A2B1F' }}>
+            {language === 'ar' ? 'التعلم أصبح أسهل' : 'Learning Made Easier'}
+          </h2>
+          <p style={{ fontSize: '1em', margin: '8px 0', color: '#3A2B1F' }}>{language === 'ar' ? 'تعلم في أي وقت وأي مكان' : 'Learn Anytime, Anywhere'}</p>
           {session ? (
-            language === 'ar' ? (
-              <>
-                <span>مرحبًا</span>
-                <p style={{ margin: '5px 0', fontSize: '1.2em' }}>{session.user.name}</p>
-              </>
-            ) : (
-              <>
-                <span>Hello</span>
-                <p style={{ margin: '5px 0', fontSize: '1.2em' }}>{session.user.name}</p>
-              </>
-            )
-          ) : t.welcome}
-        </h1>
-        <h2 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', fontSize: '1.5em', margin: '10px 0' }}>
-          {language === 'ar' ? 'التعلم أصبح أسهل' : 'Learning Made Easier'}
-        </h2>
-        <p style={{ fontSize: '1.1em', margin: '10px 0' }}>{language === 'ar' ? 'تعلم في أي وقت وأي مكان' : 'Learn Anytime, Anywhere'}</p>
-        {session ? (
-          <Link href="/materials">
-            <button style={{ 
-              marginTop: '20px', 
-              backgroundColor: '#D2B48C', 
-              color: '#3A2B1F', 
-              padding: '20px 40px', 
-              borderRadius: '10px', 
-              fontWeight: 'bold', 
-              fontSize: '18px',
-              fontFamily: language === 'ar' ? "'Amiri', serif" : "'Roboto', sans-serif"
-            }}>
-              {language === 'ar' ? 'ابدأ التعلم' : 'Start Learning'}
-            </button>
-          </Link>
-        ) : (
-          <Link href="/login">
-            <button style={{ 
-              marginTop: '20px', 
-              backgroundColor: '#D2B48C', 
-              color: '#3A2B1F', 
-              padding: '20px 40px', 
-              borderRadius: '10px', 
-              fontWeight: 'bold', 
-              fontSize: '18px',
-              fontFamily: language === 'ar' ? "'Amiri', serif" : "'Roboto', sans-serif"
-            }}>
-              {language === 'ar' ? 'ابدأ التعلم' : 'Start Learning'}
-            </button>
-          </Link>
-        )}
+            <Link href="/materials">
+              <button 
+                style={{
+                  marginTop: '10px',
+                  backgroundColor: '#D2B48C',
+                  color: '#3A2B1F',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  fontFamily: language === 'ar' ? "'Amiri', serif" : "'Roboto', sans-serif",
+                  transition: 'padding 0.3s, font-size 0.3s',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.padding = '12px 24px';
+                  e.currentTarget.style.fontSize = '18px';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.padding = '10px 20px';
+                  e.currentTarget.style.fontSize = '16px';
+                }}
+              >
+                {language === 'ar' ? 'ابدأ التعلم' : 'Start Learning'}
+              </button>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <button 
+                style={{
+                  marginTop: '20px',
+                  backgroundColor: '#D2B48C',
+                  color: '#3A2B1F',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  fontFamily: language === 'ar' ? "'Amiri', serif" : "'Roboto', sans-serif",
+                  transition: 'padding 0.3s, font-size 0.3s',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.padding = '12px 24px';
+                  e.currentTarget.style.fontSize = '18px';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.padding = '10px 20px';
+                  e.currentTarget.style.fontSize = '16px';
+                }}
+              >
+                {language === 'ar' ? 'ابدأ التعلم' : 'Start Learning'}
+              </button>
+            </Link>
+          )}
+        </div>
       </div>
-      <div className="features" style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap', margin: '40px 0' }}>
-        <h2 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', fontSize: '1.5em', width: '100%', marginBottom: '20px' }}>
-          {t.whyChooseUs}
+
+      {/* New Section: Why Choose Us (Oval Cards) */}
+      <div
+        className="why-choose-us"
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '20px 0', flex: 1 }}
+      >
+        <h2 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', fontSize: '1.3em', marginBottom: '15px', color: '#3A2B1F' }}>
+          {t.whyChooseUs || (language === 'ar' ? 'لماذا تختار منصتنا؟' : 'Why Choose Us?')}
         </h2>
         <div
-          style={{
-            backgroundColor: '#FFF5E1',
-            padding: '20px',
-            borderRadius: '20px',
-            width: '250px',
-            textAlign: 'center',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease',
-            cursor: 'pointer',
-            backdropFilter: 'blur(5px)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-            e.currentTarget.style.backdropFilter = 'blur(10px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-            e.currentTarget.style.backdropFilter = 'blur(5px)';
-          }}
-          onClick={() => alert(language === 'ar' ? 'تعرف على المزيد عن منصتنا!' : 'Learn more about our platform!')}
+          style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}
         >
-          <p style={{ margin: 0, fontSize: '16px' }}>{t.anytimeAnywhere}</p>
-        </div>
-        <div
-          style={{
-            backgroundColor: '#FFF5E1',
-            padding: '20px',
-            borderRadius: '20px',
-            width: '250px',
-            textAlign: 'center',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease',
-            cursor: 'pointer',
-            backdropFilter: 'blur(5px)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-            e.currentTarget.style.backdropFilter = 'blur(10px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-            e.currentTarget.style.backdropFilter = 'blur(5px)';
-          }}
-          onClick={() => alert(language === 'ar' ? 'واجهة سهلة ومريحة للاستخدام!' : 'Easy and comfortable interface!')}
-        >
-          <p style={{ margin: 0, fontSize: '16px' }}>{t.userFriendly}</p>
-        </div>
-        <div
-          style={{
-            backgroundColor: '#FFF5E1',
-            padding: '20px',
-            borderRadius: '20px',
-            width: '250px',
-            textAlign: 'center',
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease',
-            cursor: 'pointer',
-            backdropFilter: 'blur(5px)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-            e.currentTarget.style.backdropFilter = 'blur(10px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-            e.currentTarget.style.backdropFilter = 'blur(5px)';
-          }}
-          onClick={() => alert(language === 'ar' ? 'مواد تعليمية متنوعة تناسب الجميع!' : 'Diverse materials for everyone!')}
-        >
-          <p style={{ margin: 0, fontSize: '16px' }}>{t.diverseMaterials}</p>
+          <div
+            style={{
+              backgroundColor: '#FFF5E1',
+              padding: '10px 20px',
+              borderRadius: '50px', // Oval shape
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: '200px',
+              maxWidth: '300px',
+              textAlign: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+            }}
+            onClick={() => alert(language === 'ar' ? 'تعرف على المزيد عن منصتنا!' : 'Learn more about our platform!')}
+          >
+            <p style={{ margin: 0, fontSize: '14px', whiteSpace: 'normal', color: '#3A2B1F' }}>
+              {language === 'ar' ? 'تعلم في أي وقت وأي مكان' : 'Learn Anytime, Anywhere'}
+            </p>
+          </div>
+          <div
+            style={{
+              backgroundColor: '#FFF5E1',
+              padding: '10px 20px',
+              borderRadius: '50px', // Oval shape
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: '200px',
+              maxWidth: '300px',
+              textAlign: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+            }}
+            onClick={() => alert(language === 'ar' ? 'مواد تعليمية متنوعة تناسب الجميع!' : 'Diverse materials for everyone!')}
+          >
+            <p style={{ margin: 0, fontSize: '14px', whiteSpace: 'normal', color: '#3A2B1F' }}>
+              {language === 'ar' ? 'مواد تعليمية متنوعة وتناسب الجميع' : 'Diverse Educational Materials'}
+            </p>
+          </div>
+          <div
+            style={{
+              backgroundColor: '#FFF5E1',
+              padding: '10px 20px',
+              borderRadius: '50px', // Oval shape
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: '200px',
+              maxWidth: '300px',
+              textAlign: 'center',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+            }}
+            onClick={() => alert(language === 'ar' ? 'واجهة سهلة ومريحة للاستخدام!' : 'Easy and comfortable interface!')}
+          >
+            <p style={{ margin: 0, fontSize: '14px', whiteSpace: 'normal', color: '#3A2B1F' }}>
+              {language === 'ar' ? 'واجهة سهلة ومريحة' : 'Easy and Comfortable Interface'}
+            </p>
+          </div>
         </div>
       </div>
     </div>

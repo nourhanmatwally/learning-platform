@@ -8,5 +8,5 @@ const UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now } // تاريخ الإنشاء
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('User', UserSchema); // تصحيح userSchema إلى UserSchema
 export default User;

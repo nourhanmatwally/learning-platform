@@ -1,3 +1,4 @@
+/* الكلاسات القديمة (محتفظين بيها) */
 .container {
   max-width: 400px;
   margin: 50px auto;
@@ -49,4 +50,102 @@
 .error {
   color: red;
   margin-bottom: 15px;
+}
+
+/* الكلاسات الجديدة لتحسين صفحة الـ Signup */
+.signupContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+  padding: 20px;
+}
+
+.signupCard {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.title {
+  font-size: 2rem;
+  color: #0288d1;
+  margin-bottom: 20px;
+}
+
+.iconRow {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.icon {
+  font-size: 1.5rem;
+  color: #0288d1;
+}
+
+/* الكلاسات اللي ممكن تكون مشتركة لكن مع تحسينات */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.input:focus {
+  border-color: #0288d1;
+  outline: none;
+}
+
+.button {
+  padding: 10px;
+  background-color: #0288d1;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button:disabled {
+  background-color: #b0bec5;
+  cursor: not-allowed;
+}
+
+.button:hover:not(:disabled) {
+  background-color: #01579b;
+}
+
+.error {
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.link {
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.link a {
+  color: #0288d1;
+  text-decoration: none;
+}
+
+.link a:hover {
+  text-decoration: underline;
 }

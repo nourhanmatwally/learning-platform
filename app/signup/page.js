@@ -17,7 +17,7 @@ export default function Signup() {
     setLoading(true);
     setError('');
     try {
-      console.log('Sending data:', { name, email, password }); // <--- أضيفي ده
+      console.log('Sending data:', { name, email, password });
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,7 +34,7 @@ export default function Signup() {
         router.push('/login');
       }
     } catch (err) {
-      console.error('Error in signup:', err); // <--- أضيفي ده
+      console.error('Error in signup:', err);
       setError('حدث خطأ، حاول مرة أخرى');
     } finally {
       setLoading(false);
@@ -42,29 +42,15 @@ export default function Signup() {
   };
 
   return (
-    <>
-      <nav className={styles.navbar}>
-        <div className={styles.logo}>
-          <img src="/logo.png" alt="شعار سكيب" className={styles.logoImage} />
-          سكيب
-        </div>
-        <div className={styles.navLinks}>
-          <a href="/materials" className={styles.navLink}>
-            <FaBook /> المواد
-          </a>
-          <a href="/quizzes" className={styles.navLink}>
-            <FaQuestionCircle /> الاختبارات
-          </a>
-          <a href="/discussions" className={styles.navLink}>
-            <FaComments /> المناقشات
-          </a>
-          <a href="/projects" className={styles.navLink}>
-            <FaProjectDiagram /> المشاريع
-          </a>
-        </div>
-      </nav>
-      <div className={styles.container}>
+    <div className={styles.signupContainer}>
+      <div className={styles.signupCard}>
         <h1 className={styles.title}>إنشاء حساب</h1>
+        <div className={styles.iconRow}>
+          <FaBook className={styles.icon} />
+          <FaQuestionCircle className={styles.icon} />
+          <FaComments className={styles.icon} />
+          <FaProjectDiagram className={styles.icon} />
+        </div>
         <form onSubmit={handleSubmit} className={styles.form}>
           <input
             type="text"
@@ -95,10 +81,10 @@ export default function Signup() {
           </button>
           {error && <p className={styles.error}>{error}</p>}
         </form>
-        <p>
+        <p className={styles.link}>
           لديك حساب؟ <a href="/login">تسجيل الدخول</a>
         </p>
       </div>
-    </>
+    </div>
   );
 }

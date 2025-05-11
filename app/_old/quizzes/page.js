@@ -1,7 +1,7 @@
 "use client";
 
-import { useLanguage } from '../../lib/LanguageContext';
-import { translations } from '../../lib/translations';
+import { useLanguage } from '../../../lib/LanguageContext';
+import { translations } from '../../../lib/translations';
 import { FaBook, FaCalculator, FaFlask, FaLanguage } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 

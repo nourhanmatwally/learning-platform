@@ -12,7 +12,7 @@ export default function Discussions() {
       {/* الشريط العلوي */}
       <nav className={styles.navbar}>
         <div className={styles.logo}>
-          <img src="/logo.png" alt="شعار سكيب" className={styles.logoImage} />
+          <Image src="/logo.png" alt="شعار سكيب" className={styles.logoImage} />
           سكيب
         </div>
         <div className={styles.navLinks}>

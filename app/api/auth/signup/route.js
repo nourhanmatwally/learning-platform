@@ -1,13 +1,12 @@
-
-import { connectToDatabase } from '../../../../lib/mongodb';
+import connectToMongoose from '../../../../lib/mongoose';
 import User from '../../../../models/User';
 import { hash } from 'bcryptjs';
 
 export async function POST(req) {
   try {
-    console.log('Step 1: Attempting to connect to MongoDB...');
-    await connectToDatabase();
-    console.log('Step 2: Connected to MongoDB');
+    console.log('Step 1: Attempting to connect to Mongoose...');
+    await connectToMongoose();
+    console.log('Step 2: Connected to Mongoose');
     console.log('Step 3: Parsing request body...');
     const { name, email, password } = await req.json();
     console.log('Step 4: Received data:', { name, email, password });
@@ -29,6 +28,6 @@ export async function POST(req) {
     return new Response(JSON.stringify({ message: 'تم إنشاء الحساب بنجاح' }), { status: 201 });
   } catch (error) {
     console.error('Error in signup:', error);
-    return new Response(JSON.stringify({ error: 'حدث خطأ، حاول مرة أخرى' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'حدث خطأ، حاول مرة أخرى: ' + error.message }), { status: 500 });
   }
 }

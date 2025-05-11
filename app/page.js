@@ -8,12 +8,22 @@ import Image from 'next/image';
 
 export default function Home() {
   const { data: session } = useSession();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const t = translations[language];
   const direction = language === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <div className="container" style={{ direction, textAlign: 'center', height: 'calc(100vh - 150px)', overflow: 'auto', display: 'flex', flexDirection: 'column', padding: '20px' }}>
+    <div className="container" style={{ 
+      direction, 
+      textAlign: 'center', 
+      minHeight: 'calc(100vh - 150px)', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      padding: '20px',
+      width: '100%', 
+      boxSizing: 'border-box', 
+      overflowX: 'hidden', 
+    }}>
       {/* Combined Container: Image Card + Welcome Message */}
       <div
         className="welcome-section"
@@ -25,6 +35,8 @@ export default function Home() {
           gap: '30px',
           marginBottom: '30px',
           flexWrap: 'wrap',
+          width: '100%',
+          maxWidth: '100%',
         }}
       >
         {/* Image Card */}
@@ -150,7 +162,7 @@ export default function Home() {
             style={{
               backgroundColor: '#FFF5E1',
               padding: '10px 20px',
-              borderRadius: '50px', // Oval shape
+              borderRadius: '50px',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -179,7 +191,7 @@ export default function Home() {
             style={{
               backgroundColor: '#FFF5E1',
               padding: '10px 20px',
-              borderRadius: '50px', // Oval shape
+              borderRadius: '50px',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -208,7 +220,7 @@ export default function Home() {
             style={{
               backgroundColor: '#FFF5E1',
               padding: '10px 20px',
-              borderRadius: '50px', // Oval shape
+              borderRadius: '50px',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -232,6 +244,64 @@ export default function Home() {
             <p style={{ margin: 0, fontSize: '14px', whiteSpace: 'normal', color: '#3A2B1F' }}>
               {language === 'ar' ? 'واجهة سهلة ومريحة' : 'Easy and Comfortable Interface'}
             </p>
+          </div>
+        </div>
+
+        {/* User Guide Section */}
+        <div
+          className="user-guide"
+          style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+        >
+          <h3 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', fontSize: '1.2em', marginBottom: '10px', color: '#3A2B1F' }}>
+            {language === 'ar' ? 'دليل المستخدم' : 'User Guide'}
+          </h3>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
+            <Link href="/teacher-guide">
+              <div
+                style={{
+                  backgroundColor: '#FFF5E1',
+                  padding: '10px 15px',
+                  borderRadius: '20px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '150px',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.3s ease',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <p style={{ margin: 0, fontSize: '12px', color: '#3A2B1F' }}>
+                  {language === 'ar' ? 'دليل للمعلم' : 'Teacher Guide'}
+                </p>
+              </div>
+            </Link>
+            <Link href="/student-guide">
+              <div
+                style={{
+                  backgroundColor: '#FFF5E1',
+                  padding: '10px 15px',
+                  borderRadius: '20px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '150px',
+                  textAlign: 'center',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  transition: 'transform 0.3s ease',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                <p style={{ margin: 0, fontSize: '12px', color: '#3A2B1F' }}>
+                  {language === 'ar' ? 'دليل للطالب' : 'Student Guide'}
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

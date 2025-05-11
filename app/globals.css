@@ -43,3 +43,14 @@ button:hover {
 h1, h2 {
   color: #8A9A5B;
 }
+
+/* أنماط مخصصة لزر إعادة تعيين كلمة المرور */
+.reset-password-btn {
+  background: none !important;
+  border: none !important;
+  color: #1E90FF !important; /* لون أزرق للنص */
+  text-decoration: underline !important;
+  padding: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+}

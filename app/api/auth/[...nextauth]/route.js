@@ -6,6 +6,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { MongoDBAdapter } from '@next-auth/mongodb-adapter';
 import clientPromise from '../../../../lib/mongodb';
+import { compare } from 'bcryptjs';
 
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
@@ -32,6 +33,10 @@ export const authOptions = {
             throw new Error('لا يوجد مستخدم بهذا البريد الإلكتروني');
           }
           console.log('Step 5: Comparing password...');
+          if (!user.password) {
+            console.log('Step 6: No password set for this user');
+            throw new Error('هذا الحساب مسجل باستخدام Google، استخدم تسجيل الدخول عبر Google');
+          }
           const isValid = await compare(credentials.password, user.password);
           if (!isValid) {
             console.log('Step 6: Invalid password');
@@ -40,8 +45,8 @@ export const authOptions = {
           console.log('Step 7: User authenticated:', user.email);
           return { id: user._id.toString(), name: user.name, email: user.email };
         } catch (error) {
-          console.error('Error in Credentials authorize:', error);
-          throw error;
+          console.error('Error in Credentials authorize:', error.message);
+          throw new Error(error.message);
         }
       },
     }),
@@ -56,7 +61,7 @@ export const authOptions = {
     }),
   ],
   pages: {
-    signIn: '/login',
+    signIn: '/api/auth/signin',
   },
   session: {
     strategy: 'jwt',

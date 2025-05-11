@@ -1,4 +1,4 @@
-/* الكلاسات القديمة (محتفظين بيها) */
+/* الكلاسات القديمة */
 .container {
   max-width: 400px;
   margin: 50px auto;
@@ -52,18 +52,18 @@
   margin-bottom: 15px;
 }
 
-/* الكلاسات الجديدة لتحسين صفحة الـ Signup */
+/* الكلاسات المعدلة لصفحة الـ Signup */
 .signupContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+  background: linear-gradient(135deg, #f5f5dc, #d3c4a9); /* درجات البيج والنود */
   padding: 20px;
 }
 
 .signupCard {
-  background: white;
+  background: #fffaf0; /* لون بيج فاتح */
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -74,7 +74,7 @@
 
 .title {
   font-size: 2rem;
-  color: #0288d1;
+  color: #8d7b58; /* لون نود غامق */
   margin-bottom: 20px;
 }
 
@@ -87,10 +87,9 @@
 
 .icon {
   font-size: 1.5rem;
-  color: #0288d1;
+  color: #8d7b58; /* لون نود غامق */
 }
 
-/* الكلاسات اللي ممكن تكون مشتركة لكن مع تحسينات */
 .form {
   display: flex;
   flex-direction: column;
@@ -99,20 +98,20 @@
 
 .input {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #d3c4a9; /* لون نود */
   border-radius: 5px;
   font-size: 1rem;
   transition: border-color 0.3s;
 }
 
 .input:focus {
-  border-color: #0288d1;
+  border-color: #8d7b58; /* لون نود غامق */
   outline: none;
 }
 
 .button {
   padding: 10px;
-  background-color: #0288d1;
+  background-color: #8d7b58; /* لون نود غامق */
   color: white;
   border: none;
   border-radius: 5px;
@@ -122,12 +121,12 @@
 }
 
 .button:disabled {
-  background-color: #b0bec5;
+  background-color: #b0a78d; /* لون نود باهت */
   cursor: not-allowed;
 }
 
 .button:hover:not(:disabled) {
-  background-color: #01579b;
+  background-color: #6b5b3f; /* لون نود أغمق */
 }
 
 .error {
@@ -142,7 +141,7 @@
 }
 
 .link a {
-  color: #0288d1;
+  color: #8d7b58; /* لون نود غامق */
   text-decoration: none;
 }
 

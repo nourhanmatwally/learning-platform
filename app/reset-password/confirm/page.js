@@ -1,42 +1,60 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import jwt from 'jsonwebtoken';
 
-export default function Signup() {
-  const router = useRouter();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+export default function ConfirmResetPassword() {
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token');
+
+  useEffect(() => {
+    if (!token) {
+      setError('رابط غير صالح');
+      return;
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.NEXT_PUBLIC_JWT_SECRET);
+      console.log('Decoded token:', decoded);
+    } catch (err) {
+      setError('الرابط منتهي الصلاحية أو غير صالح');
+    }
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setMessage('');
     setError('');
+
+    if (password !== confirmPassword) {
+      setError('كلمتا المرور غير متطابقتين');
+      return;
+    }
+
     try {
-      console.log('Sending data:', { name, email, password });
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/auth/reset-password/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ token, password }),
       });
+
       const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 400) {
-          setError('البريد الإلكتروني مسجل مسبقًا');
-        } else {
-          setError(data.error || 'حدث خطأ، حاول مرة أخرى');
-        }
+
+      if (res.ok) {
+        setMessage('تم تحديث كلمة المرور بنجاح');
+        setTimeout(() => router.push('/signin'), 3000);
       } else {
-        router.push('/signin'); // غيّرنا من /login لـ /signin
+        setError(data.message || 'حدث خطأ أثناء تحديث كلمة المرور');
       }
     } catch (err) {
-      console.error('Error in signup:', err);
-      setError('حدث خطأ، حاول مرة أخرى');
-    } finally {
-      setLoading(false);
+      console.error('Error during password reset:', err);
+      setError('حدث خطأ غير متوقع، حاول مرة أخرى');
     }
   };
 
@@ -72,7 +90,7 @@ export default function Signup() {
             fontFamily: "'Tajawal', sans-serif",
           }}
         >
-          إنشاء حساب
+          تحديث كلمة المرور
         </h1>
         <form
           onSubmit={handleSubmit}
@@ -93,75 +111,7 @@ export default function Signup() {
                 fontFamily: "'Tajawal', sans-serif",
               }}
             >
-              الاسم
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #8A9A5B",
-                backgroundColor: "#F5F5DC",
-                color: "#4A3728",
-                fontSize: "16px",
-                outline: "none",
-                transition: "all 0.3s",
-                fontFamily: "'Tajawal', sans-serif",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#6F8050")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#8A9A5B")}
-              required
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "medium",
-                color: "#4A3728",
-                marginBottom: "8px",
-                fontFamily: "'Tajawal', sans-serif",
-              }}
-            >
-              البريد الإلكتروني
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #8A9A5B",
-                backgroundColor: "#F5F5DC",
-                color: "#4A3728",
-                fontSize: "16px",
-                outline: "none",
-                transition: "all 0.3s",
-                fontFamily: "'Tajawal', sans-serif",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#6F8050")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#8A9A5B")}
-              required
-            />
-          </div>
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "medium",
-                color: "#4A3728",
-                marginBottom: "8px",
-                fontFamily: "'Tajawal', sans-serif",
-              }}
-            >
-              كلمة المرور
+              كلمة المرور الجديدة
             </label>
             <input
               type="password"
@@ -184,6 +134,52 @@ export default function Signup() {
               required
             />
           </div>
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: "14px",
+                fontWeight: "medium",
+                color: "#4A3728",
+                marginBottom: "8px",
+                fontFamily: "'Tajawal', sans-serif",
+              }}
+            >
+              تأكيد كلمة المرور
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "8px",
+                border: "1px solid #8A9A5B",
+                backgroundColor: "#F5F5DC",
+                color: "#4A3728",
+                fontSize: "16px",
+                outline: "none",
+                transition: "all 0.3s",
+                fontFamily: "'Tajawal', sans-serif",
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#6F8050")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#8A9A5B")}
+              required
+            />
+          </div>
+          {message && (
+            <div
+              style={{
+                color: "#8A9A5B",
+                textAlign: "center",
+                fontSize: "14px",
+                fontFamily: "'Tajawal', sans-serif",
+              }}
+            >
+              <p>{message}</p>
+            </div>
+          )}
           {error && (
             <div
               style={{
@@ -198,7 +194,6 @@ export default function Signup() {
           )}
           <button
             type="submit"
-            disabled={loading}
             style={{
               width: "100%",
               backgroundColor: "#8A9A5B",
@@ -208,41 +203,15 @@ export default function Signup() {
               border: "none",
               fontSize: "16px",
               fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: "pointer",
               transition: "all 0.3s",
               fontFamily: "'Tajawal', sans-serif",
-              opacity: loading ? 0.6 : 1,
             }}
-            onMouseEnter={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = "#6F8050";
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = "#8A9A5B";
-            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#6F8050")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#8A9A5B")}
           >
-            {loading ? 'جاري التحميل...' : 'إنشاء حساب'}
+            تحديث كلمة المرور
           </button>
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: "14px",
-              color: "#4A3728",
-              fontFamily: "'Tajawal', sans-serif",
-              marginTop: "16px",
-            }}
-          >
-            لديك حساب؟{' '}
-            <a
-              href="/signin"
-              style={{
-                color: "#1E90FF",
-                textDecoration: "underline",
-                cursor: "pointer",
-              }}
-            >
-              تسجيل الدخول
-            </a>
-          </p>
         </form>
       </div>
     </div>

@@ -1,7 +1,8 @@
 'use client';
 
+
 import './globals.css';
-import { SessionProvider, useSession } from 'next-auth/react';
+import { SessionProvider, useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -10,11 +11,12 @@ import { translations } from '../lib/translations';
 import { LanguageProvider, useLanguage } from '../lib/LanguageContext';
 import { faqDatabase } from '../lib/faqData';
 
+
 function MiniChat({ onClose, isAutoOpened }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isClosedPermanently, setIsClosedPermanently] = useState(false);
-  const { language } = useLanguage();
+  const { language, session } = useLanguage();
   const t = translations[language];
   const direction = language === 'ar' ? 'rtl' : 'ltr';
 
@@ -82,7 +84,7 @@ function MiniChat({ onClose, isAutoOpened }) {
     return matrix[b.length][a.length];
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
     setMessages([...messages, { text: input, sender: 'user' }]);
 
@@ -94,12 +96,16 @@ function MiniChat({ onClose, isAutoOpened }) {
     if (language === 'ar') {
       matchedQuestion = faqDatabase.general.ar[cleanedInput] || 
                         faqDatabase.studies.ar[cleanedInput] || 
-                        faqDatabase.virtualClassSkills.ar[cleanedInput];
+                        faqDatabase.virtualClassSkills.ar[cleanedInput] ||
+                        faqDatabase.projectsDiscussions.ar[cleanedInput] ||
+                        faqDatabase.googleClassroom.ar[cleanedInput];
 
       if (!matchedQuestion) {
         const generalMatch = findClosestMatch(cleanedInput, faqDatabase.general.ar);
         const studiesMatch = findClosestMatch(cleanedInput, faqDatabase.studies.ar);
         const virtualMatch = findClosestMatch(cleanedInput, faqDatabase.virtualClassSkills.ar);
+        const projectsMatch = findClosestMatch(cleanedInput, faqDatabase.projectsDiscussions.ar);
+        const googleMatch = findClosestMatch(cleanedInput, faqDatabase.googleClassroom.ar);
 
         if (generalMatch) {
           matchedQuestion = faqDatabase.general.ar[generalMatch];
@@ -107,6 +113,10 @@ function MiniChat({ onClose, isAutoOpened }) {
           matchedQuestion = faqDatabase.studies.ar[studiesMatch];
         } else if (virtualMatch) {
           matchedQuestion = faqDatabase.virtualClassSkills.ar[virtualMatch];
+        } else if (projectsMatch) {
+          matchedQuestion = faqDatabase.projectsDiscussions.ar[projectsMatch];
+        } else if (googleMatch) {
+          matchedQuestion = faqDatabase.googleClassroom.ar[googleMatch];
         }
       }
 
@@ -116,7 +126,22 @@ function MiniChat({ onClose, isAutoOpened }) {
         } else if (cleanedInput.includes('تقدر تساعدني ازاي')) {
           autoResponse = 'أكيد، أقدر أساعدك! اسأليني أي سؤال عن المنصة أو الدراسة، زي "متى الامتحانات؟" أو "كيف أدخل الفصل الافتراضي؟"';
         } else {
-          autoResponse = 'آسف، مش فاهم سؤالك كويس، ممكن تسألي بطريقة تانية؟ جربي مثلاً: "متى الامتحانات؟" أو "كيف أدخل الفصل الافتراضي؟"';
+          autoResponse = 'أنا لسه مش عارف إجابة السؤال ده، هارجعلك بعد شوية. 👀 هبلغ مطور المنصة وهيوصلك الرد قريب إن شاء الله.';
+          const timestamp = new Date().toISOString();
+          const notificationData = {
+            question: input,
+            userId: session?.user?.id || 'Anonymous',
+            timestamp,
+          };
+          try {
+            await fetch('/api/notify-developer', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(notificationData),
+            });
+          } catch (err) {
+            console.error('Error notifying developer:', err);
+          }
         }
       } else {
         autoResponse = matchedQuestion;
@@ -124,12 +149,16 @@ function MiniChat({ onClose, isAutoOpened }) {
     } else {
       matchedQuestion = faqDatabase.general.en[cleanedInput] || 
                         faqDatabase.studies.en[cleanedInput] || 
-                        faqDatabase.virtualClassSkills.en[cleanedInput];
+                        faqDatabase.virtualClassSkills.en[cleanedInput] ||
+                        faqDatabase.projectsDiscussions.en[cleanedInput] ||
+                        faqDatabase.googleClassroom.en[cleanedInput];
 
       if (!matchedQuestion) {
         const generalMatch = findClosestMatch(cleanedInput, faqDatabase.general.en);
         const studiesMatch = findClosestMatch(cleanedInput, faqDatabase.studies.en);
         const virtualMatch = findClosestMatch(cleanedInput, faqDatabase.virtualClassSkills.en);
+        const projectsMatch = findClosestMatch(cleanedInput, faqDatabase.projectsDiscussions.en);
+        const googleMatch = findClosestMatch(cleanedInput, faqDatabase.googleClassroom.en);
 
         if (generalMatch) {
           matchedQuestion = faqDatabase.general.en[generalMatch];
@@ -137,6 +166,10 @@ function MiniChat({ onClose, isAutoOpened }) {
           matchedQuestion = faqDatabase.studies.en[studiesMatch];
         } else if (virtualMatch) {
           matchedQuestion = faqDatabase.virtualClassSkills.en[virtualMatch];
+        } else if (projectsMatch) {
+          matchedQuestion = faqDatabase.projectsDiscussions.en[projectsMatch];
+        } else if (googleMatch) {
+          matchedQuestion = faqDatabase.googleClassroom.en[googleMatch];
         }
       }
 
@@ -146,7 +179,22 @@ function MiniChat({ onClose, isAutoOpened }) {
         } else if (cleanedInput.includes('how can you help me')) {
           autoResponse = 'Sure, I can help! Ask me anything about the platform or studies, like "When are the exams?" or "How do I join a virtual class?"';
         } else {
-          autoResponse = 'Sorry, I didn’t quite get that. Can you ask differently? Try something like "When are the exams?" or "How do I join a virtual class?"';
+          autoResponse = 'I don’t have an answer for that yet, but I’ll get back to you soon! 👀 I’ll notify the developer, and they’ll respond shortly, inshallah.';
+          const timestamp = new Date().toISOString();
+          const notificationData = {
+            question: input,
+            userId: session?.user?.id || 'Anonymous',
+            timestamp,
+          };
+          try {
+            await fetch('/api/notify-developer', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(notificationData),
+            });
+          } catch (err) {
+            console.error('Error notifying developer:', err);
+          }
         }
       } else {
         autoResponse = matchedQuestion;
@@ -174,95 +222,136 @@ function MiniChat({ onClose, isAutoOpened }) {
   if (isClosedPermanently && !isAutoOpened) return null;
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      bottom: '80px', 
-      right: '20px', 
-      width: '320px', 
-      height: '450px', 
-      background: '#FFF5E1', 
-      border: '2px solid #D2B48C', 
-      borderRadius: '15px', 
-      zIndex: 1000, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      boxShadow: '0 8px 16px rgba(0,0,0,0.3)', 
+    <div style={{
+      position: 'fixed',
+      bottom: window.innerWidth <= 600 ? '0' : '80px',
+      right: window.innerWidth <= 600 ? '0' : '20px',
+      width: window.innerWidth <= 600 ? '100%' : '320px',
+      height: window.innerWidth <= 600 ? '80vh' : '450px',
+      backgroundColor: '#FFF5E1',
+      border: '2px solid #8A9A5B',
+      borderRadius: window.innerWidth <= 600 ? '15px 15px 0 0' : '15px',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
       overflow: 'hidden',
-      fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif",
+      fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif'",
     }}>
-      <div style={{ 
-        padding: '12px 15px', 
-        background: 'linear-gradient(to right, #F5EAD0, #EDE0B0)', 
-        color: '#FFF5E1', 
-        borderTopLeftRadius: '13px', 
-        borderTopRightRadius: '13px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+      <div style={{
+        padding: '12px 15px',
+        background: 'linear-gradient(to right, #F5EAD0, #EDE0B0)',
+        color: '#FFF5E1',
+        borderTopLeftRadius: '13px',
+        borderTopRightRadius: '13px',
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
       }}>
-        <h3 style={{ 
-          margin: 0, 
-          fontSize: '18px', 
+        <h3 style={{
+          margin: 0,
+          fontSize: '18px',
           fontWeight: 'bold',
           textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
         }}>
           {language === 'ar' ? 'شاتك الخاص' : 'Your Private Chat'}
         </h3>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <button onClick={onClose} style={{ 
-            background: 'none', 
-            border: 'none', 
-            color: '#FFF5E1', 
-            cursor: 'pointer', 
-            fontSize: '18px',
-            transition: 'all 0.3s',
-            minWidth: '40px',
-            minHeight: '40px',
-          }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-            <span>-</span>
-          </button>
-          <Link href="/chat" style={{ color: '#FFF5E1', textDecoration: 'none', minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ 
-              fontSize: '18px',
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: '#8A9A5B',
+              color: '#FFF5E1',
+              borderRadius: '50%',
+              width: '30px',
+              height: '30px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
               transition: 'all 0.3s',
-            }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-              ...
-            </span>
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#6F8050';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#8A9A5B';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            🔽
+          </button>
+          <Link href="/chat">
+            <button
+              style={{
+                backgroundColor: '#8A9A5B',
+                color: '#FFF5E1',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                transition: 'all 0.3s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F8050'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8A9A5B'}
+            >
+              {language === 'ar' ? 'تحدث بارتياح' : 'Chat Comfortably'}
+            </button>
           </Link>
-          <button onClick={handlePermanentClose} style={{ 
-            background: 'none', 
-            border: 'none', 
-            color: '#FFF5E1', 
-            cursor: 'pointer', 
-            fontSize: '18px',
-            transition: 'all 0.3s',
-            minWidth: '40px',
-            minHeight: '40px',
-          }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
-            <span>X</span>
+          <button
+            onClick={handlePermanentClose}
+            style={{
+              backgroundColor: '#D9534F',
+              color: '#FFF5E1',
+              borderRadius: '50%',
+              width: '30px',
+              height: '30px',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '16px',
+              transition: 'all 0.3s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#C9302C';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#D9534F';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            X
           </button>
         </div>
       </div>
-      <div style={{ 
-        flex: 1, 
-        overflowY: 'auto', 
-        padding: '15px', 
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '15px',
         direction,
-        background: '#FFF5E1',
-        borderBottom: '1px solid #D2B48C',
+        backgroundColor: '#FFF5E1',
+        borderBottom: '1px solid #8A9A5B',
       }}>
         {messages.map((msg, index) => (
-          <div key={index} style={{ 
-            display: 'flex', 
-            justifyContent: msg.sender === 'user' ? (language === 'ar' ? 'flex-end' : 'flex-start') : (language === 'ar' ? 'flex-start' : 'flex-end'), 
+          <div key={index} style={{
+            display: 'flex',
+            justifyContent: msg.sender === 'user' ? (language === 'ar' ? 'flex-end' : 'flex-start') : (language === 'ar' ? 'flex-start' : 'flex-end'),
             margin: '8px 0',
           }}>
-            <div style={{ 
-              maxWidth: '75%', 
-              padding: '10px', 
-              borderRadius: '12px', 
-              background: msg.sender === 'user' ? '#D2B48C' : '#F5E5C1', 
+            <div style={{
+              maxWidth: '75%',
+              padding: '10px',
+              borderRadius: '12px',
+              background: msg.sender === 'user' ? '#8A9A5B' : '#F5E5C1',
               color: msg.sender === 'user' ? '#FFF5E1' : '#4A3728',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               transition: 'all 0.3s',
@@ -272,31 +361,35 @@ function MiniChat({ onClose, isAutoOpened }) {
           </div>
         ))}
       </div>
-      <div style={{ padding: '12px', background: '#FFF5E1' }}>
-        <input 
-          type='text' 
-          value={input} 
-          onChange={(e) => setInput(e.target.value)} 
-          onKeyPress={handleKeyPress} 
-          placeholder={t.typeQuestion} 
-          style={{ 
-            width: '100%', 
-            padding: '10px', 
-            borderRadius: '8px', 
-            border: '1px solid #D2B48C', 
-            fontSize: '15px', 
-            outline: 'none', 
+      <div style={{ padding: '12px', backgroundColor: '#FFF5E1' }}>
+        <input
+          type='text'
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder={t.typeQuestion}
+          style={{
+            width: '100%',
+            padding: '10px',
+            borderRadius: '8px',
+            border: '1px solid #8A9A5B',
+            fontSize: '15px',
+            outline: 'none',
             background: '#F5F5DC',
             transition: 'all 0.3s',
             minHeight: '40px',
-          }} 
-          onFocus={(e) => e.target.style.borderColor = '#C19A6B'}
-          onBlur={(e) => e.target.style.borderColor = '#D2B48C'}
+          }}
+          onFocus={(e) => e.currentTarget.style.borderColor = '#6F8050'}
+          onBlur={(e) => e.currentTarget.style.borderColor = '#8A9A5B'}
         />
       </div>
     </div>
   );
 }
+
+
+
+
 
 function FeedbackForm({ onClose }) {
   const [feedback, setFeedback] = useState('');
@@ -316,8 +409,8 @@ function FeedbackForm({ onClose }) {
       left: '50%',
       transform: 'translate(-50%, -50%)',
       width: '300px',
-      background: '#FFF5E1',
-      border: '2px solid #D2B48C',
+      backgroundColor: '#FFF5E1',
+      border: '2px solid #8A9A5B',
       borderRadius: '10px',
       padding: '20px',
       zIndex: 1000,
@@ -336,23 +429,23 @@ function FeedbackForm({ onClose }) {
             height: '100px',
             padding: '10px',
             borderRadius: '8px',
-            border: '1px solid #D2B48C',
-            background: '#F5F5DC',
+            border: '1px solid #8A9A5B',
+            backgroundColor: '#F5F5DC',
             color: '#4A3728',
             resize: 'none',
             outline: 'none',
             transition: 'all 0.3s',
-            fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif",
+            fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif'",
           }}
-          onFocus={(e) => e.target.style.borderColor = '#C19A6B'}
-          onBlur={(e) => e.target.style.borderColor = '#D2B48C'}
+          onFocus={(e) => e.currentTarget.style.borderColor = '#6F8050'}
+          onBlur={(e) => e.currentTarget.style.borderColor = '#8A9A5B'}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px' }}>
           <button
             type="button"
             onClick={onClose}
             style={{
-              background: '#D2B48C',
+              backgroundColor: '#8A9A5B',
               color: '#FFF5E1',
               padding: '8px 15px',
               borderRadius: '5px',
@@ -365,15 +458,15 @@ function FeedbackForm({ onClose }) {
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#C19A6B'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#D2B48C'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F8050'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8A9A5B'}
           >
             {language === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
           <button
             type="submit"
             style={{
-              background: '#D2B48C',
+              backgroundColor: '#8A9A5B',
               color: '#FFF5E1',
               padding: '8px 15px',
               borderRadius: '5px',
@@ -386,8 +479,8 @@ function FeedbackForm({ onClose }) {
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#C19A6B'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#D2B48C'}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F8050'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8A9A5B'}
           >
             {language === 'ar' ? 'إرسال' : 'Submit'}
           </button>
@@ -452,17 +545,22 @@ function InnerLayout({ children }) {
     setShowFeedback(false);
   };
 
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    router.push('/signin');
+  };
+
   return (
     <html lang={language} dir={direction}>
       <head>
         <title>{t.platformName}</title>
         <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@800&family=Roboto:wght@800&family=Cairo:wght@900&family=Amiri:wght@700&display=swap" rel="stylesheet" />
       </head>
-      <body style={{ 
-        fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", 
-        background: 'linear-gradient(to bottom, #F5F5DC, #F8F1E3)', 
-        minHeight: '100vh', 
-        display: 'flex', 
+      <body style={{
+        fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif",
+        background: 'linear-gradient(to bottom, #F5F5DC, #F8F1E3)',
+        minHeight: '100vh',
+        display: 'flex',
         flexDirection: 'column',
       }}>
         {isLoading && (
@@ -479,8 +577,8 @@ function InnerLayout({ children }) {
             zIndex: 2000,
           }}>
             <div style={{
-              border: '4px solid #D2B48C',
-              borderTop: '4px solid #D2B48C',
+              border: '4px solid #8A9A5B',
+              borderTop: '4px solid #8A9A5B',
               borderRadius: '50%',
               width: '40px',
               height: '40px',
@@ -488,28 +586,28 @@ function InnerLayout({ children }) {
             }} />
           </div>
         )}
-        <header style={{ 
-          background: 'linear-gradient(to right, #F5EAD0, #EDE0B0)', 
-          padding: '10px 20px', 
-          minHeight: '70px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between', 
-          color: '#4A3728', 
-          fontWeight: '800', 
+        <header style={{
+          background: 'linear-gradient(to right, #F5EAD0, #EDE0B0)',
+          padding: '10px 20px',
+          minHeight: '70px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          color: '#4A3728',
+          fontWeight: '800',
           boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', order: language === 'ar' ? 1 : 0 }}>
             <div style={{ position: 'relative' }}>
-              <button 
-                onClick={() => setShowSearch(!showSearch)} 
+              <button
+                onClick={() => setShowSearch(!showSearch)}
                 data-tooltip={language === 'ar' ? 'ابحث عن المواد الدراسية' : 'Search for study materials'}
-                style={{ 
-                  backgroundColor: '#EDE0B0', 
-                  padding: '10px', 
-                  borderRadius: '10px', 
-                  border: 'none', 
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)', 
+                style={{
+                  backgroundColor: '#EDE0B0',
+                  padding: '10px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                   cursor: 'pointer',
                   transition: 'all 0.3s',
                   minWidth: '40px',
@@ -522,36 +620,36 @@ function InnerLayout({ children }) {
               </button>
               {showSearch && (
                 <form onSubmit={handleSearch} style={{ position: 'absolute', top: '50px', left: 0, zIndex: 1000 }}>
-                  <input 
-                    type="text" 
-                    placeholder={t.searchPlaceholder} 
-                    value={searchQuery} 
-                    onChange={(e) => setSearchQuery(e.target.value)} 
-                    style={{ 
-                      padding: '8px', 
-                      borderRadius: '8px', 
-                      border: '1px solid #D2B48C', 
+                  <input
+                    type="text"
+                    placeholder={t.searchPlaceholder}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      padding: '8px',
+                      borderRadius: '8px',
+                      border: '1px solid #8A9A5B',
                       width: '220px',
                       backgroundColor: '#FFF5E1',
                       color: '#4A3728',
-                      fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif",
+                      fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif'",
                       transition: 'all 0.3s',
                       minHeight: '40px',
-                    }} 
-                    autoFocus 
+                    }}
+                    autoFocus
                   />
                 </form>
               )}
             </div>
             <Link href="/aboutus" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-              <button 
+              <button
                 data-tooltip={language === 'ar' ? 'عن المنصة' : 'About Us'}
-                style={{ 
-                  backgroundColor: '#EDE0B0', 
-                  padding: '10px', 
-                  borderRadius: '10px', 
-                  border: 'none', 
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)', 
+                style={{
+                  backgroundColor: '#EDE0B0',
+                  padding: '10px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                   cursor: 'pointer',
                   transition: 'all 0.3s',
                   minWidth: '40px',
@@ -565,45 +663,94 @@ function InnerLayout({ children }) {
                 </span>
               </button>
             </Link>
-            {session && (
-              <Link href="/profile" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                <div style={{ 
-                  width: '40px', 
-                  height: '40px', 
-                  borderRadius: '50%', 
-                  overflow: 'hidden', 
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+            {session ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Link href="/profile" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                    transition: 'all 0.3s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  >
+                    <img
+                      src={session.user.image || ''}
+                      alt="User"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+                </Link>
+                <button
+  onClick={handleLogout}
+  style={{
+    backgroundColor: '#D9534F',
+    color: '#FFF5E1',
+    padding: '10px 15px',
+    borderRadius: '10px',
+    border: 'none',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+    cursor: 'pointer',
+    transition: 'all 0.3s',
+    minWidth: '40px',
+    minHeight: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '16px',
+    fontWeight: 'bold',
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.backgroundColor = '#C9302C';
+    e.currentTarget.style.transform = 'scale(1.1) rotate(10deg)';
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.backgroundColor = '#D9534F';
+    e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+  }}
+>
+  {language === 'ar' ? 'تسجيل الخروج' : 'Logout'}
+</button>
+              </div>
+            ) : (
+              <Link href="/signin" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+                <button style={{
+                  backgroundColor: '#8A9A5B',
+                  color: '#FFF5E1',
+                  padding: '5px 15px',
+                  borderRadius: '5px',
+                  border: 'none',
+                  cursor: 'pointer',
                   transition: 'all 0.3s',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F8050'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8A9A5B'}
                 >
-                  <img 
-                    src={session.user.image || ''} 
-                    alt="User" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  />
-                </div>
+                  {language === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+                </button>
               </Link>
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', order: language === 'ar' ? 0 : 1 }}>
             <Link href="/" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-              <img 
-                src="/logo.png" 
-                alt="شعار سكيب" 
-                style={{ width: '70px', height: '70px', borderRadius: '50%', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))', transition: 'all 0.3s' }} 
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'} 
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} 
+              <img
+                src="/logo.png"
+                alt="شعار سكيب"
+                style={{ width: '70px', height: '70px', borderRadius: '50%', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))', transition: 'all 0.3s' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               />
             </Link>
-            <span style={{ 
-              color: '#4A3728', 
-              fontSize: '28px', 
-              fontWeight: '900', 
-              fontFamily: "'Cairo', sans-serif", 
-              textShadow: '1px 1px 2px rgba(0,0,0,0.2)', 
-              textDecoration: 'none', 
+            <span style={{
+              color: '#4A3728',
+              fontSize: '28px',
+              fontWeight: '900',
+              fontFamily: "'Cairo', sans-serif",
+              textShadow: '1px 1px 2px rgba(0,0,0,0.2)',
+              textDecoration: 'none',
               cursor: 'default',
               transition: 'all 0.3s',
             }}>
@@ -611,67 +758,79 @@ function InnerLayout({ children }) {
             </span>
           </div>
         </header>
-        <button 
-          onClick={() => setShowChat(true)} 
-          style={{ 
-            position: 'fixed', 
-            bottom: '80px', 
-            right: '20px', 
-            zIndex: 1000, 
-            background: 'linear-gradient(to right, #F5EAD0, #EDE0B0)', 
-            borderRadius: '50%', 
-            padding: '15px', 
-            border: 'none', 
-            cursor: 'pointer', 
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', 
-            transition: 'all 0.3s',
-            minWidth: '40px',
-            minHeight: '40px',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        >
-          <IoChatboxEllipses size={40} color='#FFF5E1' />
-        </button>
+
+<button
+  onClick={() => setShowChat(true)}
+  style={{
+    position: 'fixed',
+    bottom: '80px',
+    right: '20px',
+    zIndex: 1000,
+    background: '#FFF5E1',
+    borderRadius: '50%',
+    padding: '15px',
+    border: '2px solid #8A9A5B',
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+    transition: 'all 0.3s',
+    width: '60px',
+    height: '60px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  }}
+  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+>
+  <img
+    src="/chatbot-face.png" // استبدلي بمسار الصورة اللي عندك
+    alt="Chatbot Face"
+    style={{ width: '40px', height: '40px', borderRadius: '50%' }}
+  />
+  {/* لو مش عندك صورة، استخدمي أيقونة مؤقتة */}
+  {/* <span style={{ fontSize: '30px' }}>😊</span> */}
+</button>
+
+
         {showChat && <MiniChat onClose={handleChatClose} isAutoOpened={isChatAutoOpened} />}
-        <main style={{ 
-          flex: 1, 
-          padding: '20px', 
+        <main style={{
+          flex: 1,
+          padding: '20px',
           overflowY: 'auto',
           color: '#3A2B1F',
         }}>
           {children}
         </main>
+
         {showFeedback && <FeedbackForm onClose={handleFeedbackClose} />}
-        <footer style={{ 
-          padding: '0 10px', 
-          minHeight: '40px', 
-          color: '#3A2B1F', 
+        <footer style={{
+          padding: '0 10px',
+          minHeight: '40px',
+          color: '#3A2B1F',
           fontWeight: 'bold',
           width: '100%',
           maxWidth: '1200px',
           margin: '0 auto',
           boxSizing: 'border-box',
-          background: '#F8F1E3',
+          backgroundColor: '#F8F1E3',
           overflowX: 'hidden',
         }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             gap: '5px',
             width: '100%',
           }}>
-            {/* قسم التواصل */}
             <div style={{ display: 'flex', gap: '5px', order: language === 'ar' ? 3 : 1, alignItems: 'center' }}>
-              <a 
-                href="https://mail.google.com/mail/?view=cm&fs=1&to=nourhanmatwally@gmail.com&su=استفسار%20عن%20المنصة&body=مرحبًا،%20أود%20الاستفسار%20عن..." 
-                target="_blank" 
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=nourhanmatwally@gmail.com&su=استفسار%20عن%20المنصة&body=مرحبًا،%20أود%20الاستفسار%20عن..."
+                target="_blank"
                 rel="noopener noreferrer"
                 style={{ transition: 'all 0.3s', minWidth: '30px', minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.1)';
-                  e.currentTarget.style.color = '#C19A6B';
+                  e.currentTarget.style.color = '#6F8050';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
@@ -680,14 +839,14 @@ function InnerLayout({ children }) {
               >
                 <IoMail size={22} color='#3A2B1F' />
               </a>
-              <a 
-                href="https://wa.me/01284423601" 
-                target="_blank" 
+              <a
+                href="https://wa.me/01284423601"
+                target="_blank"
                 rel="noopener noreferrer"
                 style={{ transition: 'all 0.3s', minWidth: '30px', minHeight: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'scale(1.1)';
-                  e.currentTarget.style.color = '#C19A6B';
+                  e.currentTarget.style.color = '#6F8050';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
@@ -697,19 +856,20 @@ function InnerLayout({ children }) {
                 <IoLogoWhatsapp size={22} color='#3A2B1F' />
               </a>
             </div>
-            {/* قسم الروابط */}
+
+            
             <div style={{ display: 'flex', flexDirection: 'row', gap: '5px', order: language === 'ar' ? 1 : 3, alignItems: 'center', textAlign: language === 'ar' ? 'right' : 'left' }}>
-              <button 
+              <button
                 onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-                style={{ 
-                  background: '#D2B48C', 
-                  color: '#FFF5E1', 
-                  width: '30px', 
-                  height: '30px', 
-                  borderRadius: '50%', 
-                  border: 'none', 
-                  fontSize: '12px', 
-                  fontWeight: 'bold', 
+                style={{
+                  backgroundColor: '#8A9A5B',
+                  color: '#FFF5E1',
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
                   cursor: 'pointer',
                   transition: 'all 0.3s',
                   display: 'flex',
@@ -717,50 +877,49 @@ function InnerLayout({ children }) {
                   justifyContent: 'center',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#C19A6B';
+                  e.currentTarget.style.backgroundColor = '#6F8050';
                   e.currentTarget.style.transform = 'scale(1.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#D2B48C';
+                  e.currentTarget.style.backgroundColor = '#8A9A5B';
                   e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
-                {language === 'ar' ? "EN" : "AR"}
+                {language === 'ar' ? 'EN' : 'AR'}
               </button>
-              <Link 
-                href="/faq" 
-                style={{ 
-                  background: '#D2B48C', 
-                  color: '#FFF5E1', 
-                  width: '30px', 
-                  height: '30px', 
-                  borderRadius: '50%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  textDecoration: 'none', 
-                  fontSize: '12px', 
+              <Link
+                href="/faq"
+                style={{
+                  backgroundColor: '#8A9A5B',
+                  color: '#FFF5E1',
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textDecoration: 'none',
+                  fontSize: '12px',
                   fontWeight: 'bold',
                   transition: 'all 0.3s',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#C19A6B';
+                  e.currentTarget.style.backgroundColor = '#6F8050';
                   e.currentTarget.style.transform = 'scale(1.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#D2B48C';
+                  e.currentTarget.style.backgroundColor = '#8A9A5B';
                   e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
                 FAQ
               </Link>
             </div>
-            {/* قسم المعلومات (كرابط لـ Privacy) */}
             <div style={{ display: 'flex', alignItems: 'center', order: 2, gap: '5px', textAlign: 'center' }}>
               <Link href="/privacy" style={{ textDecoration: 'none' }}>
                 <p style={{ margin: '0 5px', fontSize: '10px', color: '#4A3728', opacity: 0.8, transition: 'all 0.3s' }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#C19A6B';
+                    e.currentTarget.style.color = '#6F8050';
                     e.currentTarget.style.opacity = 1;
                   }}
                   onMouseLeave={(e) => {
@@ -768,13 +927,13 @@ function InnerLayout({ children }) {
                     e.currentTarget.style.opacity = 0.8;
                   }}
                 >
-                  © 2025 {language === 'ar' ? "كل الحقوق محفوظة" : "All Rights Reserved"}
+                  © 2025 {language === 'ar' ? 'كل الحقوق محفوظة' : 'All Rights Reserved'}
                 </p>
               </Link>
             </div>
           </div>
         </footer>
-        <style jsx>{`
+        <style>{`
           @keyframes fadeIn {
             0% { opacity: 0; transform: translateY(10px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -790,7 +949,7 @@ function InnerLayout({ children }) {
             background: #F8F1E3;
           }
           ::-webkit-scrollbar-thumb {
-            background: #D2B48C;
+            background: #8A9A5B;
             border-radius: 4px;
           }
           [data-tooltip] {

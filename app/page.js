@@ -117,7 +117,7 @@ export default function Home() {
               </button>
             </Link>
           ) : (
-            <Link href="/login">
+            <Link href="/signin"> {/* غيّرنا من /login لـ /signin */}
               <button 
                 style={{
                   marginTop: '20px',

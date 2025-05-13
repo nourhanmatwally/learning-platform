@@ -1,43 +1,59 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-export default function Signup() {
+export default function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    setError("");
+    console.log("Attempting sign-in with:", { email, password });
+
     try {
-      console.log('Sending data:', { name, email, password });
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 400) {
-          setError('البريد الإلكتروني مسجل مسبقًا');
-        } else {
-          setError(data.error || 'حدث خطأ، حاول مرة أخرى');
-        }
+
+      console.log("Sign-in result (full):", JSON.stringify(result, null, 2));
+
+      if (result?.error) {
+        console.log("Error received from signIn:", result.error);
+        setError(result.error || "كلمة المرور أو الإيميل غلط");
+      } else if (result?.ok) {
+        console.log("Sign-in successful, redirecting to home");
+        router.push("/"); // غيّرنا من /dashboard لـ /
       } else {
-        router.push('/signin'); // غيّرنا من /login لـ /signin
+        console.log("Unexpected result, setting fallback error");
+        setError("حدث خطأ أثناء تسجيل الدخول، حاول مرة أخرى");
       }
     } catch (err) {
-      console.error('Error in signup:', err);
-      setError('حدث خطأ، حاول مرة أخرى');
-    } finally {
-      setLoading(false);
+      console.error("Error during signIn:", err.message || err);
+      setError(err.message || "حدث خطأ غير متوقع، حاول مرة أخرى");
     }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      console.log("Attempting Google Sign-In...");
+      await signIn("google", { callbackUrl: "/" }); // غيّرنا من /dashboard لـ /
+      console.log("Google Sign-In initiated");
+    } catch (err) {
+      setError("حدث خطأ أثناء تسجيل الدخول بجوجل");
+      console.error("Error in Google Sign-In:", err);
+    }
+  };
+
+  const handleSignUp = () => {
+    console.log("Redirecting to sign-up page");
+    router.push("/signup");
   };
 
   return (
@@ -72,7 +88,7 @@ export default function Signup() {
             fontFamily: "'Tajawal', sans-serif",
           }}
         >
-          إنشاء حساب
+          تسجيل الدخول
         </h1>
         <form
           onSubmit={handleSubmit}
@@ -82,40 +98,6 @@ export default function Signup() {
             gap: "16px",
           }}
         >
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "14px",
-                fontWeight: "medium",
-                color: "#4A3728",
-                marginBottom: "8px",
-                fontFamily: "'Tajawal', sans-serif",
-              }}
-            >
-              الاسم
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: "8px",
-                border: "1px solid #8A9A5B",
-                backgroundColor: "#F5F5DC",
-                color: "#4A3728",
-                fontSize: "16px",
-                outline: "none",
-                transition: "all 0.3s",
-                fontFamily: "'Tajawal', sans-serif",
-              }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#6F8050")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#8A9A5B")}
-              required
-            />
-          </div>
           <div>
             <label
               style={{
@@ -198,7 +180,6 @@ export default function Signup() {
           )}
           <button
             type="submit"
-            disabled={loading}
             style={{
               width: "100%",
               backgroundColor: "#8A9A5B",
@@ -208,41 +189,78 @@ export default function Signup() {
               border: "none",
               fontSize: "16px",
               fontWeight: "bold",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: "pointer",
               transition: "all 0.3s",
               fontFamily: "'Tajawal', sans-serif",
-              opacity: loading ? 0.6 : 1,
             }}
-            onMouseEnter={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = "#6F8050";
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#6F8050")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#8A9A5B")}
+          >
+            تسجيل الدخول
+          </button>
+          <button
+            onClick={handleGoogleSignIn}
+            style={{
+              width: "100%",
+              backgroundColor: "#8A9A5B",
+              color: "#FFF5E1",
+              padding: "12px",
+              borderRadius: "8px",
+              border: "none",
+              fontSize: "16px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              transition: "all 0.3s",
+              fontFamily: "'Tajawal', sans-serif",
             }}
-            onMouseLeave={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = "#8A9A5B";
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#6F8050")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#8A9A5B")}
+          >
+            تسجيل الدخول بجوجل
+          </button>
+          <button
+            onClick={() => {
+              console.log("Forgot password button clicked");
+              router.push("/reset-password");
+            }}
+            className="reset-password-btn"
+            style={{
+              width: "100%",
+              background: "none",
+              border: "none",
+              color: "#1E90FF",
+              fontSize: "14px",
+              fontWeight: "medium",
+              cursor: "pointer",
+              textDecoration: "underline",
+              fontFamily: "'Tajawal', sans-serif",
+              marginTop: "8px",
+              textAlign: "center",
             }}
           >
-            {loading ? 'جاري التحميل...' : 'إنشاء حساب'}
+            نسيت كلمة المرور؟
           </button>
-          <p
+          <button
+            onClick={handleSignUp}
             style={{
-              textAlign: "center",
-              fontSize: "14px",
-              color: "#4A3728",
+              width: "100%",
+              backgroundColor: "#8A9A5B",
+              color: "#FFF5E1",
+              padding: "12px",
+              borderRadius: "8px",
+              border: "none",
+              fontSize: "16px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              transition: "all 0.3s",
               fontFamily: "'Tajawal', sans-serif",
               marginTop: "16px",
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#6F8050")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#8A9A5B")}
           >
-            لديك حساب؟{' '}
-            <a
-              href="/signin"
-              style={{
-                color: "#1E90FF",
-                textDecoration: "underline",
-                cursor: "pointer",
-              }}
-            >
-              تسجيل الدخول
-            </a>
-          </p>
+            إنشاء حساب
+          </button>
         </form>
       </div>
     </div>

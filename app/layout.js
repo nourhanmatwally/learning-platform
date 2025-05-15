@@ -1,16 +1,14 @@
 'use client';
 
-
 import './globals.css';
 import { SessionProvider, useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { IoSearch, IoChatboxEllipses, IoMail, IoLogoWhatsapp } from 'react-icons/io5';
+import { useState, useEffect, useRef } from 'react';
+import { IoSearch, IoMail, IoLogoWhatsapp } from 'react-icons/io5';
 import { translations } from '../lib/translations';
 import { LanguageProvider, useLanguage } from '../lib/LanguageContext';
 import { faqDatabase } from '../lib/faqData';
-
 
 function MiniChat({ onClose, isAutoOpened }) {
   const [messages, setMessages] = useState([]);
@@ -19,13 +17,16 @@ function MiniChat({ onClose, isAutoOpened }) {
   const { language, session } = useLanguage();
   const t = translations[language];
   const direction = language === 'ar' ? 'rtl' : 'ltr';
+  const chatContainerRef = useRef(null);
 
-  const welcomeMessage = language === 'ar' ? 'مرحبًا! عايز مساعدة؟' : 'Hi! Need help?';
+  const welcomeMessage = language === 'ar' ? `مرحبًا ${session?.user?.name?.split(' ')[0] || 'يا طالب'}! عايز مساعدة؟` : `Hi ${session?.user?.name?.split(' ')[0] || 'Student'}! Need help?`;
+  const arabicName = session?.user?.name?.split(' ')[0] === 'Nourhan' ? 'نورهان' : session?.user?.name?.split(' ')[0];
 
   useEffect(() => {
     if (!messages.length) {
       setMessages([{ text: welcomeMessage, sender: 'system' }]);
     }
+    scrollToBottom();
   }, [messages.length, welcomeMessage]);
 
   const cleanText = (text) => {
@@ -93,52 +94,54 @@ function MiniChat({ onClose, isAutoOpened }) {
     let autoResponse = null;
     let matchedQuestion = null;
 
+    const faqSections = language === 'ar'
+      ? [
+          faqDatabase.general.ar,
+          faqDatabase.studies.ar,
+          faqDatabase.virtualClassSkills.ar,
+          faqDatabase.projectsDiscussions.ar,
+          faqDatabase.googleClassroom.ar,
+        ]
+      : [
+          faqDatabase.general.en,
+          faqDatabase.studies.en,
+          faqDatabase.virtualClassSkills.en,
+          faqDatabase.projectsDiscussions.en,
+          faqDatabase.googleClassroom.en,
+        ];
+
     if (language === 'ar') {
-      matchedQuestion = faqDatabase.general.ar[cleanedInput] || 
-                        faqDatabase.studies.ar[cleanedInput] || 
-                        faqDatabase.virtualClassSkills.ar[cleanedInput] ||
-                        faqDatabase.projectsDiscussions.ar[cleanedInput] ||
-                        faqDatabase.googleClassroom.ar[cleanedInput];
+      matchedQuestion = faqSections
+        .map(section => section[cleanedInput])
+        .find(answer => answer);
 
       if (!matchedQuestion) {
-        const generalMatch = findClosestMatch(cleanedInput, faqDatabase.general.ar);
-        const studiesMatch = findClosestMatch(cleanedInput, faqDatabase.studies.ar);
-        const virtualMatch = findClosestMatch(cleanedInput, faqDatabase.virtualClassSkills.ar);
-        const projectsMatch = findClosestMatch(cleanedInput, faqDatabase.projectsDiscussions.ar);
-        const googleMatch = findClosestMatch(cleanedInput, faqDatabase.googleClassroom.ar);
-
-        if (generalMatch) {
-          matchedQuestion = faqDatabase.general.ar[generalMatch];
-        } else if (studiesMatch) {
-          matchedQuestion = faqDatabase.studies.ar[studiesMatch];
-        } else if (virtualMatch) {
-          matchedQuestion = faqDatabase.virtualClassSkills.ar[virtualMatch];
-        } else if (projectsMatch) {
-          matchedQuestion = faqDatabase.projectsDiscussions.ar[projectsMatch];
-        } else if (googleMatch) {
-          matchedQuestion = faqDatabase.googleClassroom.ar[googleMatch];
+        const matches = faqSections.map(section => findClosestMatch(cleanedInput, section));
+        const bestMatchIndex = matches.findIndex(match => match);
+        if (bestMatchIndex !== -1) {
+          matchedQuestion = faqSections[bestMatchIndex][matches[bestMatchIndex]];
         }
       }
 
       if (!matchedQuestion) {
-        if (cleanedInput.includes('عامل إيه') || cleanedInput.includes('ازيك')) {
-          autoResponse = 'أنا تمام يا حبيبي! وإنتي عاملة إيه؟';
-        } else if (cleanedInput.includes('تقدر تساعدني ازاي')) {
-          autoResponse = 'أكيد، أقدر أساعدك! اسأليني أي سؤال عن المنصة أو الدراسة، زي "متى الامتحانات؟" أو "كيف أدخل الفصل الافتراضي؟"';
-        } else {
-          autoResponse = 'أنا لسه مش عارف إجابة السؤال ده، هارجعلك بعد شوية. 👀 هبلغ مطور المنصة وهيوصلك الرد قريب إن شاء الله.';
+        const customResponses = {
+          'عامل إيه': 'أنا تمام! وإنت عاملة إيه؟',
+          'ازيك': 'أنا كويس جدًا، شكرًا! وأنت ازيك؟',
+          'عرفني بالمنصة': 'سكيب منصة تعليمية تفاعلية تساعد الطلاب على الدراسة بسهولة، مع دروس، مهام، ودردشة!',
+          'كلمني عن المنصة': 'سكيب منصة حديثة للتعليم، تقدم دروس، جدول زمني، ودعم مباشر عبر الشات.',
+          'إيه هي المنصة دي': 'سكيب هي منصة تعليمية عربية تركز على تطوير مهارات الطلاب بطريقة ممتعة ومنظمة.',
+          'المنصة هتفيدني بإيه كطالب': 'سكيب هتساعدك تتابع دروسك، تشتغلي على مهامك، وتتفاعلي مع المعلمين بسهولة.',
+          'كيف أستخدم المنصة': 'سجلي دخولك، اختاري موادك من القائمة، واستخدمي الشات للدعم!',
+          'متى الدروس': 'الدروس متوفرة حسب الجدول الزمني في صفحتك الشخصية، تفقديه يوميًا!',
+          'تقدر تساعدني ازاي': 'أكيد، اسأليني أي حاجة عن الدراسة أو المنصة، زي مواعيد الامتحانات أو كيفية الدخول للفصول!',
+        };
+
+        autoResponse = customResponses[cleanedInput] || `سأجيب عن هذا السؤال في وقت لاحق! جرب اسئلة اخري. وسأساعدك 👀`;
+        if (!customResponses[cleanedInput]) {
           const timestamp = new Date().toISOString();
-          const notificationData = {
-            question: input,
-            userId: session?.user?.id || 'Anonymous',
-            timestamp,
-          };
+          const notificationData = { question: input, userId: session?.user?.id || 'Anonymous', timestamp };
           try {
-            await fetch('/api/notify-developer', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(notificationData),
-            });
+            await fetch('/api/notify-developer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(notificationData) });
           } catch (err) {
             console.error('Error notifying developer:', err);
           }
@@ -147,51 +150,35 @@ function MiniChat({ onClose, isAutoOpened }) {
         autoResponse = matchedQuestion;
       }
     } else {
-      matchedQuestion = faqDatabase.general.en[cleanedInput] || 
-                        faqDatabase.studies.en[cleanedInput] || 
-                        faqDatabase.virtualClassSkills.en[cleanedInput] ||
-                        faqDatabase.projectsDiscussions.en[cleanedInput] ||
-                        faqDatabase.googleClassroom.en[cleanedInput];
+      matchedQuestion = faqSections
+        .map(section => section[cleanedInput])
+        .find(answer => answer);
 
       if (!matchedQuestion) {
-        const generalMatch = findClosestMatch(cleanedInput, faqDatabase.general.en);
-        const studiesMatch = findClosestMatch(cleanedInput, faqDatabase.studies.en);
-        const virtualMatch = findClosestMatch(cleanedInput, faqDatabase.virtualClassSkills.en);
-        const projectsMatch = findClosestMatch(cleanedInput, faqDatabase.projectsDiscussions.en);
-        const googleMatch = findClosestMatch(cleanedInput, faqDatabase.googleClassroom.en);
-
-        if (generalMatch) {
-          matchedQuestion = faqDatabase.general.en[generalMatch];
-        } else if (studiesMatch) {
-          matchedQuestion = faqDatabase.studies.en[studiesMatch];
-        } else if (virtualMatch) {
-          matchedQuestion = faqDatabase.virtualClassSkills.en[virtualMatch];
-        } else if (projectsMatch) {
-          matchedQuestion = faqDatabase.projectsDiscussions.en[projectsMatch];
-        } else if (googleMatch) {
-          matchedQuestion = faqDatabase.googleClassroom.en[googleMatch];
+        const matches = faqSections.map(section => findClosestMatch(cleanedInput, section));
+        const bestMatchIndex = matches.findIndex(match => match);
+        if (bestMatchIndex !== -1) {
+          matchedQuestion = faqSections[bestMatchIndex][matches[bestMatchIndex]];
         }
       }
 
       if (!matchedQuestion) {
-        if (cleanedInput.includes('how are you')) {
-          autoResponse = 'I’m doing great, thanks! How about you?';
-        } else if (cleanedInput.includes('how can you help me')) {
-          autoResponse = 'Sure, I can help! Ask me anything about the platform or studies, like "When are the exams?" or "How do I join a virtual class?"';
-        } else {
-          autoResponse = 'I don’t have an answer for that yet, but I’ll get back to you soon! 👀 I’ll notify the developer, and they’ll respond shortly, inshallah.';
+        const customResponses = {
+          'how are you': 'I’m doing great, thanks! How about you?',
+          'tell me about the platform': 'Skype is an interactive educational platform that helps students study easily with lessons, tasks, and chat!',
+          'what is this platform': 'Skype is a modern Arabic educational platform focused on developing student skills in a fun and organized way.',
+          'how can the platform help me as a student': 'Skype will help you track your lessons, work on tasks, and interact with teachers easily.',
+          'how do i use the platform': 'Log in, choose your subjects from the menu, and use the chat for support!',
+          'when are the lessons': 'Lessons are available according to your schedule on your profile page, check it daily!',
+          'how can you help me': 'Sure, ask me anything about studying or the platform, like exam dates or how to join classes!',
+        };
+
+        autoResponse = customResponses[cleanedInput.toLowerCase()] || `l will respond soon, Try Another question, and i'll answer u. 👀`;
+        if (!customResponses[cleanedInput.toLowerCase()]) {
           const timestamp = new Date().toISOString();
-          const notificationData = {
-            question: input,
-            userId: session?.user?.id || 'Anonymous',
-            timestamp,
-          };
+          const notificationData = { question: input, userId: session?.user?.id || 'Anonymous', timestamp };
           try {
-            await fetch('/api/notify-developer', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(notificationData),
-            });
+            await fetch('/api/notify-developer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(notificationData) });
           } catch (err) {
             console.error('Error notifying developer:', err);
           }
@@ -202,21 +189,32 @@ function MiniChat({ onClose, isAutoOpened }) {
     }
 
     if (autoResponse) {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { text: autoResponse, sender: 'system' },
-      ]);
+      setMessages(prevMessages => [...prevMessages, { text: autoResponse, sender: 'system' }]);
     }
     setInput('');
+    scrollToBottom();
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') handleSend();
+    if (e.key === 'Enter') {
+      handleSend();
+    }
+  };
+
+  const handleMinimize = () => {
+    onClose();
   };
 
   const handlePermanentClose = () => {
+    setMessages([{ text: welcomeMessage, sender: 'system' }]);
     setIsClosedPermanently(true);
     onClose();
+  };
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   };
 
   if (isClosedPermanently && !isAutoOpened) return null;
@@ -259,7 +257,7 @@ function MiniChat({ onClose, isAutoOpened }) {
         </h3>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button
-            onClick={onClose}
+            onClick={handleMinimize}
             style={{
               backgroundColor: '#8A9A5B',
               color: '#FFF5E1',
@@ -274,18 +272,12 @@ function MiniChat({ onClose, isAutoOpened }) {
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#6F8050';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#8A9A5B';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#6F8050'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#8A9A5B'}
           >
-            🔽
+            ⬇️
           </button>
-          <Link href="/chat">
+          <Link href="/chat" onClick={handleMinimize}>
             <button
               style={{
                 backgroundColor: '#8A9A5B',
@@ -307,7 +299,7 @@ function MiniChat({ onClose, isAutoOpened }) {
           <button
             onClick={handlePermanentClose}
             style={{
-              backgroundColor: '#D9534F',
+              backgroundColor: '#6F8050',
               color: '#FFF5E1',
               borderRadius: '50%',
               width: '30px',
@@ -320,20 +312,14 @@ function MiniChat({ onClose, isAutoOpened }) {
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#C9302C';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#D9534F';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#8A9A5B'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6F8050'}
           >
-            X
+            ❌
           </button>
         </div>
       </div>
-      <div style={{
+      <div ref={chatContainerRef} style={{
         flex: 1,
         overflowY: 'auto',
         padding: '15px',
@@ -351,7 +337,7 @@ function MiniChat({ onClose, isAutoOpened }) {
               maxWidth: '75%',
               padding: '10px',
               borderRadius: '12px',
-              background: msg.sender === 'user' ? '#8A9A5B' : '#F5E5C1',
+              background: msg.sender === 'user' ? '#6F8050' : '#F5E5C1',
               color: msg.sender === 'user' ? '#FFF5E1' : '#4A3728',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               transition: 'all 0.3s',
@@ -369,15 +355,17 @@ function MiniChat({ onClose, isAutoOpened }) {
           onKeyPress={handleKeyPress}
           placeholder={t.typeQuestion}
           style={{
-            width: '100%',
+            width: '90%',
             padding: '10px',
-            borderRadius: '8px',
+            borderRadius: '20px',
             border: '1px solid #8A9A5B',
             fontSize: '15px',
             outline: 'none',
             background: '#F5F5DC',
             transition: 'all 0.3s',
             minHeight: '40px',
+            margin: '0 auto',
+            display: 'block',
           }}
           onFocus={(e) => e.currentTarget.style.borderColor = '#6F8050'}
           onBlur={(e) => e.currentTarget.style.borderColor = '#8A9A5B'}
@@ -386,10 +374,6 @@ function MiniChat({ onClose, isAutoOpened }) {
     </div>
   );
 }
-
-
-
-
 
 function FeedbackForm({ onClose }) {
   const [feedback, setFeedback] = useState('');
@@ -555,6 +539,7 @@ function InnerLayout({ children }) {
       <head>
         <title>{t.platformName}</title>
         <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@800&family=Roboto:wght@800&family=Cairo:wght@900&family=Amiri:wght@700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
       </head>
       <body style={{
         fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif",
@@ -593,7 +578,7 @@ function InnerLayout({ children }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          color: '#4A3728',
+          color: '#3A2B1F',
           fontWeight: '800',
           boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
         }}>
@@ -641,9 +626,9 @@ function InnerLayout({ children }) {
                 </form>
               )}
             </div>
-            <Link href="/aboutus" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Link href="/privacy" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
               <button
-                data-tooltip={language === 'ar' ? 'عن المنصة' : 'About Us'}
+                data-tooltip={language === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}
                 style={{
                   backgroundColor: '#EDE0B0',
                   padding: '10px',
@@ -659,61 +644,82 @@ function InnerLayout({ children }) {
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
               >
                 <span style={{ color: '#FFF5E1', fontSize: '16px', fontWeight: 'bold' }}>
-                  {language === 'ar' ? 'عن' : 'About'}
+                  {language === 'ar' ? 'سياستنا' : 'Policy'}
                 </span>
               </button>
             </Link>
             {session ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Link href="/profile" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-                    transition: 'all 0.3s',
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                  >
-                    <img
-                      src={session.user.image || ''}
-                      alt="User"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </div>
-                </Link>
+                {session.user.image ? (
+                  <Link href="/profile" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                      transition: 'all 0.3s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      <img
+                        src={session.user.image}
+                        alt="User"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
+                  </Link>
+                ) : (
+                  <Link href="/profile" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      backgroundColor: '#EDE0B0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                      transition: 'all 0.3s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    >
+                      <span style={{ fontSize: '20px', color: '#6F8050' }}>👤</span>
+                    </div>
+                  </Link>
+                )}
                 <button
-  onClick={handleLogout}
-  style={{
-    backgroundColor: '#D9534F',
-    color: '#FFF5E1',
-    padding: '10px 15px',
-    borderRadius: '10px',
-    border: 'none',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-    cursor: 'pointer',
-    transition: 'all 0.3s',
-    minWidth: '40px',
-    minHeight: '40px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '16px',
-    fontWeight: 'bold',
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.backgroundColor = '#C9302C';
-    e.currentTarget.style.transform = 'scale(1.1) rotate(10deg)';
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.backgroundColor = '#D9534F';
-    e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
-  }}
->
-  {language === 'ar' ? 'تسجيل الخروج' : 'Logout'}
-</button>
+                  onClick={handleLogout}
+                  style={{
+                    backgroundColor: '#6F8050',
+                    color: '#FFF5E1',
+                    padding: '10px 15px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    minWidth: '40px',
+                    minHeight: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#8A9A5B';
+                    e.currentTarget.style.transform = 'scale(1.1) rotate(10deg)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#6F8050';
+                    e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                  }}
+                >
+                  {language === 'ar' ? 'تسجيل الخروج' : 'Logout'}
+                </button>
               </div>
             ) : (
               <Link href="/signin" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -745,7 +751,7 @@ function InnerLayout({ children }) {
               />
             </Link>
             <span style={{
-              color: '#4A3728',
+              color: '#3A2B1F',
               fontSize: '28px',
               fontWeight: '900',
               fontFamily: "'Cairo', sans-serif",
@@ -783,14 +789,11 @@ function InnerLayout({ children }) {
   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
 >
   <img
-    src="/chatbot-face.png" // استبدلي بمسار الصورة اللي عندك
+    src="/chatbot-face.png"
     alt="Chatbot Face"
     style={{ width: '40px', height: '40px', borderRadius: '50%' }}
   />
-  {/* لو مش عندك صورة، استخدمي أيقونة مؤقتة */}
-  {/* <span style={{ fontSize: '30px' }}>😊</span> */}
 </button>
-
 
         {showChat && <MiniChat onClose={handleChatClose} isAutoOpened={isChatAutoOpened} />}
         <main style={{
@@ -857,7 +860,6 @@ function InnerLayout({ children }) {
               </a>
             </div>
 
-            
             <div style={{ display: 'flex', flexDirection: 'row', gap: '5px', order: language === 'ar' ? 1 : 3, alignItems: 'center', textAlign: language === 'ar' ? 'right' : 'left' }}>
               <button
                 onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
@@ -916,20 +918,9 @@ function InnerLayout({ children }) {
               </Link>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', order: 2, gap: '5px', textAlign: 'center' }}>
-              <Link href="/privacy" style={{ textDecoration: 'none' }}>
-                <p style={{ margin: '0 5px', fontSize: '10px', color: '#4A3728', opacity: 0.8, transition: 'all 0.3s' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#6F8050';
-                    e.currentTarget.style.opacity = 1;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = '#4A3728';
-                    e.currentTarget.style.opacity = 0.8;
-                  }}
-                >
-                  © 2025 {language === 'ar' ? 'كل الحقوق محفوظة' : 'All Rights Reserved'}
-                </p>
-              </Link>
+              <p style={{ margin: '0 5px', fontSize: '10px', color: '#4A3728', opacity: 0.8, transition: 'all 0.3s' }}>
+                © 2025 {language === 'ar' ? 'كل الحقوق محفوظة' : 'All Rights Reserved'}
+              </p>
             </div>
           </div>
         </footer>
@@ -986,7 +977,7 @@ function InnerLayout({ children }) {
             }
             footer a svg {
               width: 18px;
-              height: 18px;
+              height: '18px';
             }
             footer p {
               font-size: 10px;

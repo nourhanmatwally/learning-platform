@@ -117,7 +117,7 @@ export default function Home() {
               </button>
             </Link>
           ) : (
-            <Link href="/signin"> {/* غيّرنا من /login لـ /signin */}
+            <Link href="/signin">
               <button 
                 style={{
                   marginTop: '20px',
@@ -252,53 +252,74 @@ export default function Home() {
           className="user-guide"
           style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
         >
-          <h3 style={{ fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif", fontWeight: 'bold', fontSize: '1.2em', marginBottom: '10px', color: '#3A2B1F' }}>
-            {language === 'ar' ? 'دليل المستخدم' : 'User Guide'}
-          </h3>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
-            <Link href="/teacher-guide">
-              <div
-                style={{
-                  backgroundColor: '#FFF5E1',
-                  padding: '10px 15px',
-                  borderRadius: '20px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: '150px',
-                  textAlign: 'center',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.3s ease',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                <p style={{ margin: 0, fontSize: '12px', color: '#3A2B1F' }}>
-                  {language === 'ar' ? 'دليل للمعلم' : 'Teacher Guide'}
-                </p>
-              </div>
-            </Link>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
             <Link href="/student-guide">
               <div
                 style={{
-                  backgroundColor: '#FFF5E1',
-                  padding: '10px 15px',
-                  borderRadius: '20px',
+                  backgroundColor: '#D2B48C',
+                  color: '#3A2B1F',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  minWidth: '150px',
+                  minWidth: '180px',
                   textAlign: 'center',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                  transition: 'transform 0.3s ease',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
                   cursor: 'pointer',
+                  border: '1px solid #3A2B1F',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
+                  e.currentTarget.style.backgroundColor = '#E5C9A0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                  e.currentTarget.style.backgroundColor = '#D2B48C';
+                }}
               >
-                <p style={{ margin: 0, fontSize: '12px', color: '#3A2B1F' }}>
-                  {language === 'ar' ? 'دليل للطالب' : 'Student Guide'}
+                <p style={{ margin: 0, color: '#3A2B1F' }}>
+                  {language === 'ar' ? 'دليل الطالب' : 'Student Guide'}
+                </p>
+              </div>
+            </Link>
+            <Link href="/aboutus">
+              <div
+                style={{
+                  backgroundColor: '#D2B48C',
+                  color: '#3A2B1F',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '180px',
+                  textAlign: 'center',
+                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease',
+                  cursor: 'pointer',
+                  border: '1px solid #3A2B1F',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 12px rgba(0,0,0,0.3)';
+                  e.currentTarget.style.backgroundColor = '#E5C9A0';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                  e.currentTarget.style.backgroundColor = '#D2B48C';
+                }}
+              >
+                <p style={{ margin: 0, color: '#3A2B1F' }}>
+                  {language === 'ar' ? 'عن المنصة' : 'About the Platform'}
                 </p>
               </div>
             </Link>

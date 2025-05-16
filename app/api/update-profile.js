@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
-import clientPromise, { connectToDatabase } from '../../../lib/mongodb';
+import { connectToDatabase } from '../../../lib/mongodb'; // حذفنا clientPromise
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);

@@ -4,11 +4,11 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { translations } from '../../lib/translations';
 import { useLanguage } from '../../lib/LanguageContext';
-import { useState } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { FiBook, FiCheckCircle, FiCalendar, FiAward, FiEdit } from 'react-icons/fi';
 import styled from 'styled-components';
+import Image from 'next/image'; // إضافة استيراد Image
 
 const Header = styled.div`
   height: 200px;
@@ -108,10 +108,12 @@ export default function Profile() {
   return (
     <>
       <Header>
-        <img
+        <Image
           src={session.user.image && session.user.image !== '' ? session.user.image : 'https://via.placeholder.com/100?text=Profile'}
           alt={t.profilePicture}
-          style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #4A704A', marginRight: '20px' }}
+          width={100}
+          height={100}
+          style={{ borderRadius: '50%', objectFit: 'cover', border: '3px solid #4A704A', marginRight: '20px' }}
         />
         <div>
           <h1 style={{ color: '#4A704A', margin: 0, fontWeight: 600 }}>{session.user.name}</h1>
@@ -218,7 +220,7 @@ export default function Profile() {
               <FiAward style={{ fontSize: '1.5em' }} /> {isArabic ? 'الإنجازات' : 'Achievements'}
             </h2>
             <div style={{ fontSize: '0.9em', fontWeight: 'bold', textAlign: 'center' }}>
-              <img src="/badge-icon.png" alt="Badge Icon" style={{ width: '40px', marginBottom: '5px' }} />
+              <Image src="/badge-icon.png" alt="Badge Icon" width={40} height={40} style={{ marginBottom: '5px' }} />
               <ul style={{ paddingLeft: '0', listStyle: 'none', margin: '5px 0' }}>
                 {achievements.map((ach, i) => (
                   <li key={i} style={{ fontSize: '0.85em', margin: '3px 0' }}>

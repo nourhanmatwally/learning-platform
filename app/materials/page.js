@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // استيراد useRouter
 import { FaHome, FaComments, FaQuestionCircle, FaProjectDiagram, FaChalkboardTeacher, FaChartLine, FaBook } from 'react-icons/fa';
 import { translations } from '../../lib/translations';
 import { useLanguage } from '../../lib/LanguageContext';
+import Image from 'next/image'; // إضافة استيراد Image
 
 export default function Materials() {
   const { language } = useLanguage();
@@ -12,6 +14,7 @@ export default function Materials() {
   const direction = language === 'ar' ? 'rtl' : 'ltr';
   const [activeSection, setActiveSection] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const router = useRouter(); // استخدام useRouter
 
   const menuItems = [
     { name: t.home, path: '/', component: null, icon: <FaHome /> },
@@ -24,7 +27,19 @@ export default function Materials() {
 
   function DiscussionsContent() {
     return (
-      <div style={{ padding: '20px', textAlign: language === 'ar' ? 'right' : 'left', backgroundColor: '#FFF5E1', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <div style={{ 
+        padding: '20px', 
+        textAlign: language === 'ar' ? 'right' : 'left', 
+        backgroundColor: '#FFF5E1', 
+        borderRadius: '15px', 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+        minHeight: '200px', 
+        height: 'auto', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        maxHeight: '600px', 
+        overflowY: 'auto' 
+      }}>
         <h2 style={{ color: '#3A2B1F', fontSize: '24px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <FaComments color="#D2B48C" /> {t.discussions}
         </h2>
@@ -58,20 +73,32 @@ export default function Materials() {
       const urlParams = new URLSearchParams(window.location.search);
       const quizCompleted = urlParams.get('quizCompleted');
       if (quizCompleted) {
-        const updatedCompleted = { ...completedQuizzes, [quizCompleted]: true };
+        const updatedCompleted = { ...stored, [quizCompleted]: true };
         setCompletedQuizzes(updatedCompleted);
         localStorage.setItem('completedQuizzes', JSON.stringify(updatedCompleted));
         setNotification(language === 'ar' ? 'ممتاز! لقد أكملت اختبار الدراسات!' : 'Great job! You completed the Social Studies quiz!');
-        window.history.replaceState({}, document.title, "/quizzes");
+        router.replace('/quizzes'); // استخدام router.replace بدلاً من window.history
       }
-    }, []);
+    }, [router]); // إضافة router كـ dependency
 
     const handleQuizStart = (quizKey) => {
       window.location.href = `${quizLinks[quizKey]}?quizCompleted=${quizKey}`;
     };
 
     return (
-      <div style={{ padding: '20px', textAlign: language === 'ar' ? 'right' : 'left', backgroundColor: '#FFF5E1', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <div style={{ 
+        padding: '20px', 
+        textAlign: language === 'ar' ? 'right' : 'left', 
+        backgroundColor: '#FFF5E1', 
+        borderRadius: '15px', 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+        minHeight: '200px', 
+        height: 'auto', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        maxHeight: '600px', 
+        overflowY: 'auto' 
+      }}>
         {notification && (
           <div style={{ position: 'relative', backgroundColor: '#D2B48C', color: '#3A2B1F', padding: '10px 20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', marginBottom: '20px' }}>
             {notification}
@@ -151,7 +178,19 @@ export default function Materials() {
 
   function ProjectsContent() {
     return (
-      <div style={{ padding: '20px', textAlign: language === 'ar' ? 'right' : 'left', backgroundColor: '#FFF5E1', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <div style={{ 
+        padding: '20px', 
+        textAlign: language === 'ar' ? 'right' : 'left', 
+        backgroundColor: '#FFF5E1', 
+        borderRadius: '15px', 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+        minHeight: '200px', 
+        height: 'auto', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        maxHeight: '600px', 
+        overflowY: 'auto' 
+      }}>
         <h2 style={{ color: '#3A2B1F', fontSize: '24px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <FaProjectDiagram color="#D2B48C" /> {t.projects}
         </h2>
@@ -170,7 +209,9 @@ export default function Materials() {
           onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            <h3 style={{ color: '#3A2B1F', fontSize: '20px', marginBottom: '10px' }}>مشروع الرياضيات</h3>
+            <h3 style={{ color: '#3A2B1F', fontSize: '20px', marginBottom: '10px' }}>
+              {language === 'ar' ? 'مشروع الرياضيات' : 'Math Project'}
+            </h3>
             <p style={{ color: '#4A3728', fontSize: '16px', marginBottom: '15px' }}>
               {language === 'ar' ? 'أنشئ عرض تقديمي عن موضوع رياضي.' : 'Create a presentation on a math topic.'}
             </p>
@@ -206,7 +247,9 @@ export default function Materials() {
           onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            <h3 style={{ color: '#3A2B1F', fontSize: '20px', marginBottom: '10px' }}>مشروع العلوم</h3>
+            <h3 style={{ color: '#3A2B1F', fontSize: '20px', marginBottom: '10px' }}>
+              {language === 'ar' ? 'مشروع العلوم' : 'Science Project'}
+            </h3>
             <p style={{ color: '#4A3728', fontSize: '16px', marginBottom: '15px' }}>
               {language === 'ar' ? 'قدم تجربة علمية ممتعة.' : 'Present an exciting science experiment.'}
             </p>
@@ -242,7 +285,9 @@ export default function Materials() {
           onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
           onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            <h3 style={{ color: '#3A2B1F', fontSize: '20px', marginBottom: '10px' }}>مشروع اللغة العربية</h3>
+            <h3 style={{ color: '#3A2B1F', fontSize: '20px', marginBottom: '10px' }}>
+              {language === 'ar' ? 'مشروع اللغة العربية' : 'Arabic Project'}
+            </h3>
             <p style={{ color: '#4A3728', fontSize: '16px', marginBottom: '15px' }}>
               {language === 'ar' ? 'اكتب قصة قصيرة أو قصيدة.' : 'Write a short story or poem.'}
             </p>
@@ -280,6 +325,12 @@ export default function Materials() {
         background: 'linear-gradient(135deg, #FFF5E1 0%, #F5E5C1 100%)',
         borderRadius: '15px',
         boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
+        minHeight: '200px',
+        height: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: '600px',
+        overflowY: 'auto'
       }}>
         <h2 style={{
           color: '#4A3728',
@@ -305,7 +356,7 @@ export default function Materials() {
           href="https://classroom.google.com"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ textDecoration: 'none' }} // إزالة الخط الأزرق
+          style={{ textDecoration: 'none' }}
         >
           <button style={{
             background: 'linear-gradient(to right, #D2B48C, #C19A6B)',
@@ -349,7 +400,19 @@ export default function Materials() {
     ];
 
     return (
-      <div style={{ padding: '20px', textAlign: language === 'ar' ? 'right' : 'left', backgroundColor: '#FFF5E1', borderRadius: '15px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <div style={{ 
+        padding: '20px', 
+        textAlign: language === 'ar' ? 'right' : 'left', 
+        backgroundColor: '#FFF5E1', 
+        borderRadius: '15px', 
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+        minHeight: '200px', 
+        height: 'auto', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        maxHeight: '600px', 
+        overflowY: 'auto' 
+      }}>
         <h2 style={{ color: '#3A2B1F', fontSize: '24px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <FaChartLine color="#D2B48C" /> {t.results}
         </h2>
@@ -543,13 +606,15 @@ export default function Materials() {
             </div>
           ) : (
             <div style={{ textAlign: 'center', color: '#3A2B1F', position: 'relative', height: '100%' }}>
-              <img 
+              <Image 
                 src="/welcome-illustration.png" 
                 alt={language === 'ar' ? 'رسم توضيحي ترحيبي' : 'Welcome Illustration'} 
-                style={{ width: '300px', height: '300px', margin: '20px auto', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }} 
+                width={300} 
+                height={300} 
+                style={{ margin: '20px auto', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }} 
               />
               <h2 style={{ fontSize: '28px', margin: '20px 0 10px', fontWeight: 'bold' }}>
-                {t.subjectHeader}
+                {language === 'ar' ? 'مرحبًا بك في المواد الدراسية' : 'Welcome to Study Materials'}
               </h2>
               <p style={{ fontSize: '18px', color: '#4A3728' }}>
                 {language === 'ar' ? 'اختر قسمًا من القائمة على الجانب لبدء التعلم!' : 'Select a section from the sidebar to start learning!'}

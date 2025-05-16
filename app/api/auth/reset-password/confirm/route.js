@@ -15,7 +15,7 @@ export async function POST(req) {
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (err) {
+    } catch {
       return new Response(JSON.stringify({ message: 'الرابط منتهي الصلاحية أو غير صالح' }), { status: 400 });
     }
 

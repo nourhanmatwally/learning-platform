@@ -22,7 +22,7 @@ export default function ConfirmResetPassword() {
     try {
       const decoded = jwt.verify(token, process.env.NEXT_PUBLIC_JWT_SECRET);
       console.log('Decoded token:', decoded);
-    } catch (err) {
+    } catch  {
       setError('الرابط منتهي الصلاحية أو غير صالح');
     }
   }, [token]);

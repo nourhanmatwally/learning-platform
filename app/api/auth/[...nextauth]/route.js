@@ -68,7 +68,7 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) { // حذفنا profile لأنه مش مستخدم
       try {
         if (account.provider === 'google') {
           console.log('Step 1: Connecting to MongoDB for Google Sign-In...');

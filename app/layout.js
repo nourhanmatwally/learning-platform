@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import './globals.css';
 import { SessionProvider, useSession, signOut } from 'next-auth/react';
@@ -6,21 +6,23 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { IoSearch, IoMail, IoLogoWhatsapp } from 'react-icons/io5';
-import { translations } from '../lib/translations';
 import { LanguageProvider, useLanguage } from '../lib/LanguageContext';
 import { faqDatabase } from '../lib/faqData';
+import Image from 'next/image';
+import { Tajawal, Roboto } from 'next/font/google';
+
+const tajawal = Tajawal({ weight: '800', subsets: ['arabic'] });
+const roboto = Roboto({ weight: '800', subsets: ['latin'] });
 
 function MiniChat({ onClose, isAutoOpened }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isClosedPermanently, setIsClosedPermanently] = useState(false);
   const { language, session } = useLanguage();
-  const t = translations[language];
   const direction = language === 'ar' ? 'rtl' : 'ltr';
   const chatContainerRef = useRef(null);
 
-  const welcomeMessage = language === 'ar' ? `مرحبًا ${session?.user?.name?.split(' ')[0] || 'يا طالب'}! عايز مساعدة؟` : `Hi ${session?.user?.name?.split(' ')[0] || 'Student'}! Need help?`;
-  const arabicName = session?.user?.name?.split(' ')[0] === 'Nourhan' ? 'نورهان' : session?.user?.name?.split(' ')[0];
+  const welcomeMessage = language === 'ar' ? `مرحبًا ${session?.user?.name?.split(' ')[0] || 'يا طالب'}! اساعدك ازاي؟` : `Hi ${session?.user?.name?.split(' ')[0] || 'Student'}! Need help?`;
 
   useEffect(() => {
     if (!messages.length) {
@@ -59,7 +61,6 @@ function MiniChat({ onClose, isAutoOpened }) {
 
   const calculateSimilarity = (str1, str2) => {
     const longer = str1.length > str2.length ? str1 : str2;
-    const shorter = str1.length > str2.length ? str2 : str1;
     const longerLength = longer.length;
     if (longerLength === 0) return 1.0;
     const editDistance = levenshteinDistance(str1, str2);
@@ -173,7 +174,7 @@ function MiniChat({ onClose, isAutoOpened }) {
           'how can you help me': 'Sure, ask me anything about studying or the platform, like exam dates or how to join classes!',
         };
 
-        autoResponse = customResponses[cleanedInput.toLowerCase()] || `l will respond soon, Try Another question, and i'll answer u. 👀`;
+        autoResponse = customResponses[cleanedInput.toLowerCase()] || `I will respond soon, Try Another question, and I'll answer you. 👀`;
         if (!customResponses[cleanedInput.toLowerCase()]) {
           const timestamp = new Date().toISOString();
           const notificationData = { question: input, userId: session?.user?.id || 'Anonymous', timestamp };
@@ -234,7 +235,7 @@ function MiniChat({ onClose, isAutoOpened }) {
       flexDirection: 'column',
       boxShadow: '0 8px 16px rgba(0,0,0,0.3)',
       overflow: 'hidden',
-      fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif'",
+      fontFamily: language === 'ar' ? tajawal.style.fontFamily : roboto.style.fontFamily,
     }}>
       <div style={{
         padding: '12px 15px',
@@ -353,7 +354,7 @@ function MiniChat({ onClose, isAutoOpened }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder={t.typeQuestion}
+          placeholder="Type your question..."
           style={{
             width: '90%',
             padding: '10px',
@@ -378,7 +379,6 @@ function MiniChat({ onClose, isAutoOpened }) {
 function FeedbackForm({ onClose }) {
   const [feedback, setFeedback] = useState('');
   const { language } = useLanguage();
-  const t = translations[language];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -419,7 +419,7 @@ function FeedbackForm({ onClose }) {
             resize: 'none',
             outline: 'none',
             transition: 'all 0.3s',
-            fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif'",
+            fontFamily: language === 'ar' ? tajawal.style.fontFamily : roboto.style.fontFamily,
           }}
           onFocus={(e) => e.currentTarget.style.borderColor = '#6F8050'}
           onBlur={(e) => e.currentTarget.style.borderColor = '#8A9A5B'}
@@ -494,7 +494,6 @@ function InnerLayout({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [showFeedback, setShowFeedback] = useState(false);
   const { language, setLanguage } = useLanguage();
-  const t = translations[language];
   const direction = language === 'ar' ? 'rtl' : 'ltr';
 
   useEffect(() => {
@@ -514,12 +513,6 @@ function InnerLayout({ children }) {
     }
   };
 
-  const toggleLanguage = () => {
-    const newLang = language === 'ar' ? 'en' : 'ar';
-    setLanguage(newLang);
-    document.documentElement.lang = newLang;
-  };
-
   const handleChatClose = () => {
     setShowChat(false);
     setIsChatAutoOpened(false);
@@ -535,14 +528,11 @@ function InnerLayout({ children }) {
   };
 
   return (
-    <html lang={language} dir={direction}>
+    <html lang={language} dir={direction} className={language === 'ar' ? tajawal.className : roboto.className}>
       <head>
-        <title>{t.platformName}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@800&family=Roboto:wght@800&family=Cairo:wght@900&family=Amiri:wght@700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet" />
+        <title>Skype Platform</title>
       </head>
       <body style={{
-        fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif",
         background: 'linear-gradient(to bottom, #F5F5DC, #F8F1E3)',
         minHeight: '100vh',
         display: 'flex',
@@ -607,7 +597,7 @@ function InnerLayout({ children }) {
                 <form onSubmit={handleSearch} style={{ position: 'absolute', top: '50px', left: 0, zIndex: 1000 }}>
                   <input
                     type="text"
-                    placeholder={t.searchPlaceholder}
+                    placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     style={{
@@ -617,7 +607,7 @@ function InnerLayout({ children }) {
                       width: '220px',
                       backgroundColor: '#FFF5E1',
                       color: '#4A3728',
-                      fontFamily: language === 'ar' ? "'Tajawal', sans-serif" : "'Roboto', sans-serif'",
+                      fontFamily: language === 'ar' ? tajawal.style.fontFamily : roboto.style.fontFamily,
                       transition: 'all 0.3s',
                       minHeight: '40px',
                     }}
@@ -663,10 +653,12 @@ function InnerLayout({ children }) {
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                      <img
+                      <Image
                         src={session.user.image}
                         alt="User"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        width={40}
+                        height={40}
+                        style={{ objectFit: 'cover' }}
                       />
                     </div>
                   </Link>
@@ -742,10 +734,12 @@ function InnerLayout({ children }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px', order: language === 'ar' ? 0 : 1 }}>
             <Link href="/" style={{ minWidth: '40px', minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-              <img
+              <Image
                 src="/logo.png"
                 alt="شعار سكيب"
-                style={{ width: '70px', height: '70px', borderRadius: '50%', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))', transition: 'all 0.3s' }}
+                width={70}
+                height={70}
+                style={{ borderRadius: '50%', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))', transition: 'all 0.3s' }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               />
@@ -765,35 +759,37 @@ function InnerLayout({ children }) {
           </div>
         </header>
 
-<button
-  onClick={() => setShowChat(true)}
-  style={{
-    position: 'fixed',
-    bottom: '80px',
-    right: '20px',
-    zIndex: 1000,
-    background: '#FFF5E1',
-    borderRadius: '50%',
-    padding: '15px',
-    border: '2px solid #8A9A5B',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-    transition: 'all 0.3s',
-    width: '60px',
-    height: '60px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }}
-  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
->
-  <img
-    src="/chatbot-face.png"
-    alt="Chatbot Face"
-    style={{ width: '40px', height: '40px', borderRadius: '50%' }}
-  />
-</button>
+        <button
+          onClick={() => setShowChat(true)}
+          style={{
+            position: 'fixed',
+            bottom: '80px',
+            right: '20px',
+            zIndex: 1000,
+            background: '#FFF5E1',
+            borderRadius: '50%',
+            padding: '15px',
+            border: '2px solid #8A9A5B',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            transition: 'all 0.3s',
+            width: '60px',
+            height: '60px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <Image
+            src="/chatbot-face.png"
+            alt="Chatbot Face"
+            width={40}
+            height={40}
+            style={{ borderRadius: '50%' }}
+          />
+        </button>
 
         {showChat && <MiniChat onClose={handleChatClose} isAutoOpened={isChatAutoOpened} />}
         <main style={{

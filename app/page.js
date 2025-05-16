@@ -8,7 +8,7 @@ import Image from 'next/image';
 
 export default function Home() {
   const { data: session } = useSession();
-  const { language, setLanguage } = useLanguage();
+  const { language } = useLanguage();
   const t = translations[language];
   const direction = language === 'ar' ? 'rtl' : 'ltr';
 

@@ -59,7 +59,7 @@ export default function EditProfile() {
       } else {
         alert(data.error || (isArabic ? 'فشل في تحديث البيانات' : 'Failed to update profile'));
       }
-    } catch (error) {
+    } catch {
       alert(isArabic ? 'حدث خطأ أثناء التحديث' : 'An error occurred during update');
     }
   };

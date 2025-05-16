@@ -1,11 +1,9 @@
 'use client';
 
 import { useLanguage } from '../../lib/LanguageContext';
-import { translations } from '../../lib/translations';
 
 export default function FAQ() {
   const { language } = useLanguage();
-  const t = translations[language];
   const direction = language === 'ar' ? 'rtl' : 'ltr';
 
   const faqs = language === 'ar' ? [

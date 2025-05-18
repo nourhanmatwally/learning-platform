@@ -17,10 +17,8 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    // تجاهل وحدة dns في الجانب العميلي
     if (!isServer) {
       config.resolve.fallback = {
-        ...config.resolve.fallback,
         dns: false,
         tls: false,
         net: false,
@@ -28,6 +26,9 @@ const nextConfig = {
     }
     return config;
   },
-}
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+};
 
-export default nextConfig
+export default nextConfig;

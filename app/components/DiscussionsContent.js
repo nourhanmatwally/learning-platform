@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { translations } from '../../lib/translations';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import { FaComments } from 'react-icons/fa';

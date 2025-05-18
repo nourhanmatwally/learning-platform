@@ -2,9 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import jwt from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken'; // تغيير الاستيراد
 
-// فصل الـ Styles إلى كائن لتحسين القراءة
 const styles = {
   container: {
     display: "flex",
@@ -83,7 +82,6 @@ const styles = {
   },
 };
 
-// مكون منفصل لاحتواء useSearchParams
 function ResetPasswordContent() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -100,13 +98,12 @@ function ResetPasswordContent() {
     }
 
     try {
-      // التحقق من وجود JWT_SECRET
       const jwtSecret = process.env.NEXT_PUBLIC_JWT_SECRET;
       if (!jwtSecret) {
         throw new Error('JWT_SECRET غير معرف');
       }
 
-      const decoded = jwt.verify(token, jwtSecret);
+      const decoded = verify(token, jwtSecret); // استخدام verify مباشرة
       console.log('Decoded token:', decoded);
     } catch (err) {
       console.error('Error verifying token:', err.message);
@@ -198,7 +195,6 @@ function ResetPasswordContent() {
   );
 }
 
-// المكون الرئيسي مع Suspense
 export default function ConfirmResetPassword() {
   return (
     <Suspense fallback={<div style={{ textAlign: 'center', padding: '50px' }}>جاري التحميل...</div>}>

@@ -1,12 +1,17 @@
-import { config } from 'dotenv';
-config();
-
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { MongoDBAdapter } from '@next-auth/mongodb-adapter';
 import clientPromise from '../../../../lib/mongodb';
 import { compare } from 'bcryptjs';
+
+// التحقق من المتغيرات البيئية
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  throw new Error('Missing Google OAuth environment variables');
+}
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('Missing NEXTAUTH_SECRET environment variable');
+}
 
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID);
 console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET);
@@ -56,12 +61,13 @@ export const authOptions = {
       authorization: {
         params: {
           scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`, // تحديد redirect_uri يدويًا
         },
       },
     }),
   ],
   pages: {
-    signIn: '/api/auth/signin',
+    signIn: '/signin', // تصحيح المسار
   },
   session: {
     strategy: 'jwt',
@@ -72,21 +78,18 @@ export const authOptions = {
       console.log('SignIn Callback - User:', user, 'Account:', account, 'Profile:', profile);
       if (account.provider === 'google') {
         console.log('Step 1: Google Sign-In detected, letting MongoDBAdapter handle user creation...');
-        // لا حاجة لإنشاء المستخدم يدويًا، دعي MongoDBAdapter يتعامل مع ذلك
         const db = (await clientPromise).db();
         const existingUser = await db.collection('users').findOne({ email: user.email });
         if (existingUser) {
           console.log('Step 2: Existing user found:', existingUser);
           if (existingUser.provider !== 'google') {
             console.log('Step 3: User exists but with a different provider:', existingUser.provider);
-            return false; // رفض الدخول إذا كان المزود مختلفًا
+            return false;
           }
           user.id = existingUser._id.toString();
         } else {
           console.log('Step 2: No existing user found, MongoDBAdapter will create one...');
-          // MongoDBAdapter سيقوم بإنشاء المستخدم تلقائيًا
         }
-        // التحقق من وجود سجل في مجموعة accounts
         const accountExists = await db.collection('accounts').findOne({
           provider: 'google',
           providerAccountId: account.providerAccountId,

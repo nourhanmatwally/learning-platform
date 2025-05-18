@@ -55,7 +55,7 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
         },
       },
     }),
@@ -68,43 +68,60 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async signIn({ user, account }) { // حذفنا profile لأنه مش مستخدم
-      try {
-        if (account.provider === 'google') {
-          console.log('Step 1: Connecting to MongoDB for Google Sign-In...');
-          const db = (await clientPromise).db();
-          console.log('Step 2: Connected to MongoDB');
-          console.log('Step 3: Checking for existing user with email:', user.email);
-          let existingUser = await db.collection('users').findOne({ email: user.email });
-          if (!existingUser) {
-            console.log('Step 4: Creating new user for Google Sign-In...');
-            existingUser = await db.collection('users').insertOne({
-              name: user.name,
-              email: user.email,
-              password: null,
-              provider: 'google',
-            });
-            console.log('Step 5: New user created:', user.email);
-          } else {
-            console.log('Step 5: Existing user found:', user.email);
+    async signIn({ user, account, profile }) {
+      console.log('SignIn Callback - User:', user, 'Account:', account, 'Profile:', profile);
+      if (account.provider === 'google') {
+        console.log('Step 1: Google Sign-In detected, letting MongoDBAdapter handle user creation...');
+        // لا حاجة لإنشاء المستخدم يدويًا، دعي MongoDBAdapter يتعامل مع ذلك
+        const db = (await clientPromise).db();
+        const existingUser = await db.collection('users').findOne({ email: user.email });
+        if (existingUser) {
+          console.log('Step 2: Existing user found:', existingUser);
+          if (existingUser.provider !== 'google') {
+            console.log('Step 3: User exists but with a different provider:', existingUser.provider);
+            return false; // رفض الدخول إذا كان المزود مختلفًا
           }
-          user.id = existingUser.insertedId ? existingUser.insertedId.toString() : existingUser._id.toString();
+          user.id = existingUser._id.toString();
+        } else {
+          console.log('Step 2: No existing user found, MongoDBAdapter will create one...');
+          // MongoDBAdapter سيقوم بإنشاء المستخدم تلقائيًا
         }
-        return true;
-      } catch (error) {
-        console.error('Error in signIn callback:', error);
-        return false;
+        // التحقق من وجود سجل في مجموعة accounts
+        const accountExists = await db.collection('accounts').findOne({
+          provider: 'google',
+          providerAccountId: account.providerAccountId,
+        });
+        if (accountExists) {
+          console.log('Step 3: Account already linked:', accountExists);
+        } else {
+          console.log('Step 3: No account linked yet, MongoDBAdapter should handle this...');
+        }
       }
+      return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      console.log('JWT Callback - Token:', token, 'User:', user, 'Account:', account);
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+      }
+      if (account) {
+        token.provider = account.provider;
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id;
+      console.log('Session Callback - Session:', session, 'Token:', token);
+      if (token) {
+        session.user.id = token.id;
+        session.user.email = token.email;
+        session.provider = token.provider;
+      }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      console.log('Redirect Callback - URL:', url, 'Base URL:', baseUrl);
+      return baseUrl + '/materials';
     },
   },
 };

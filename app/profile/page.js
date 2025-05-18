@@ -1,14 +1,17 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { translations } from '../../lib/translations';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import { FiBook, FiCheckCircle, FiCalendar, FiAward, FiEdit } from 'react-icons/fi';
+import { FiBook, FiCheckCircle, FiCalendar, FiAward, FiEdit, FiLogOut } from 'react-icons/fi';
 import styled from 'styled-components';
-import Image from 'next/image'; // إضافة استيراد Image
+import Image from 'next/image';
+import { useEffect } from 'react';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 const Header = styled.div`
   height: 200px;
@@ -67,16 +70,61 @@ const CardRow = styled.div`
 `;
 
 export default function Profile() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { language } = useLanguage();
   const t = translations[language];
   const isArabic = language === 'ar';
+  const router = useRouter();
+
+  // التحقق من الدور وإعادة التوجيه إلى /role-selection إذا لم يكن للمستخدم دور
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      if (!session.user.role) {
+        router.push('/role-selection');
+      }
+    }
+  }, [status, session, router]);
+
+  // تسجيل loginTime عند تحميل الصفحة
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.id) {
+      const recordLoginTime = async () => {
+        try {
+          await axios.post('/api/sessions', {
+            userId: session.user.id,
+            loginTime: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error('Error recording login time:', error);
+        }
+      };
+      recordLoginTime();
+    }
+  }, [status, session]);
+
+  // دالة لتسجيل logoutTime وتسجيل الخروج
+  const handleLogout = async () => {
+    try {
+      await axios.post('/api/sessions', {
+        userId: session.user.id,
+        logoutTime: new Date().toISOString(),
+      });
+      await signOut({ callbackUrl: '/' });
+    } catch (error) {
+      console.error('Error recording logout time:', error);
+      await signOut({ callbackUrl: '/' });
+    }
+  };
+
+  if (status === 'loading') {
+    return <div style={{ textAlign: 'center', padding: '50px' }}>{t.loading}</div>;
+  }
 
   if (!session) {
     return <div style={{ textAlign: 'center', padding: '50px' }}>{t.pleaseSignIn}</div>;
   }
 
-  const gradeLevel = isArabic ? 'الصف الثالث الثانوي' : 'Grade 12';
+  const gradeLevel = isArabic ? ' الصف الاول الاعدادي' : 'Grade 12';
   const courses = [
     { name: t.arabic, progress: 75 },
     { name: t.math, progress: 50 },
@@ -109,7 +157,7 @@ export default function Profile() {
     <>
       <Header>
         <Image
-          src={session.user.image && session.user.image !== '' ? session.user.image : 'https://via.placeholder.com/100?text=Profile'}
+          src={session.user.image && session.user.image !== '' ? session.user.image : '/images/default-profile.png'}
           alt={t.profilePicture}
           width={100}
           height={100}
@@ -118,10 +166,32 @@ export default function Profile() {
         <div>
           <h1 style={{ color: '#4A704A', margin: 0, fontWeight: 600 }}>{session.user.name}</h1>
           <p style={{ color: '#4A704A', fontWeight: 400 }}>{gradeLevel}</p>
-          <Link href="/profile/edit" style={{ textDecoration: 'none' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Link href="/profile/edit" style={{ textDecoration: 'none' }}>
+              <button
+                style={{
+                  backgroundColor: '#4A704A',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  fontWeight: 600,
+                }}
+                onMouseOver={(e) => (e.target.style.backgroundColor = '#3A5A3A')}
+                onMouseOut={(e) => (e.target.style.backgroundColor = '#4A704A')}
+              >
+                <FiEdit /> {t.editProfile}
+              </button>
+            </Link>
             <button
+              onClick={handleLogout}
               style={{
-                backgroundColor: '#4A704A',
+                backgroundColor: '#D9534F',
                 color: '#fff',
                 padding: '8px 16px',
                 border: 'none',
@@ -133,12 +203,12 @@ export default function Profile() {
                 gap: '5px',
                 fontWeight: 600,
               }}
-              onMouseOver={(e) => (e.target.style.backgroundColor = '#3A5A3A')}
-              onMouseOut={(e) => (e.target.style.backgroundColor = '#4A704A')}
+              onMouseOver={(e) => (e.target.style.backgroundColor = '#C9302C')}
+              onMouseOut={(e) => (e.target.style.backgroundColor = '#D9534F')}
             >
-              <FiEdit /> {t.editProfile}
+              <FiLogOut /> {isArabic ? 'تسجيل الخروج' : 'Logout'}
             </button>
-          </Link>
+          </div>
         </div>
       </Header>
       <Container>

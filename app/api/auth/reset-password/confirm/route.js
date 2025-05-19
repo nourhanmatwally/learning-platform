@@ -1,6 +1,6 @@
-import connectToMongoose from 'lib/mongoose';
+import { connectToMongoose } from 'lib/mongoose'; // تعديل الاستيراد
 import User from 'models/User';
-import jwt from 'jsonwebtoken';
+import { verify } from 'jsonwebtoken'; // تعديل الاستيراد
 import bcrypt from 'bcrypt';
 
 export async function POST(req) {
@@ -14,7 +14,7 @@ export async function POST(req) {
     // التحقق من التوكن
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = verify(token, process.env.JWT_SECRET); // استخدام verify
     } catch {
       return new Response(JSON.stringify({ message: 'الرابط منتهي الصلاحية أو غير صالح' }), { status: 400 });
     }

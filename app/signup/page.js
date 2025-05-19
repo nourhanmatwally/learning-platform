@@ -17,7 +17,7 @@ export default function Signup() {
     setError('');
     try {
       console.log('Sending data:', { name, email, password });
-      const res = await fetch('/api/auth/signup', {
+      const res = await fetch('/api/auth/register', { // تعديل المسار
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -30,7 +30,7 @@ export default function Signup() {
           setError(data.error || 'حدث خطأ، حاول مرة أخرى');
         }
       } else {
-        router.push('/signin'); // غيّرنا من /login لـ /signin
+        router.push('/signin');
       }
     } catch (err) {
       console.error('Error in signup:', err);

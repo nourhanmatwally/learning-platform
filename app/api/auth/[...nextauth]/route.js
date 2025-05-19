@@ -61,13 +61,13 @@ export const authOptions = {
       authorization: {
         params: {
           scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid',
-          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`, // تحديد redirect_uri يدويًا
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/google`,
         },
       },
     }),
   ],
   pages: {
-    signIn: '/signin', // تصحيح المسار
+    signIn: '/signin',
   },
   session: {
     strategy: 'jwt',
@@ -82,9 +82,9 @@ export const authOptions = {
         const existingUser = await db.collection('users').findOne({ email: user.email });
         if (existingUser) {
           console.log('Step 2: Existing user found:', existingUser);
-          if (existingUser.provider !== 'google') {
+          if (existingUser.provider && existingUser.provider !== 'google') {
             console.log('Step 3: User exists but with a different provider:', existingUser.provider);
-            return false;
+            throw new Error('هذا الحساب مسجل بطريقة أخرى، جرب تسجيل الدخول بطريقة مختلفة');
           }
           user.id = existingUser._id.toString();
         } else {

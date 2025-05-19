@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { useSession, update } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../../../lib/LanguageContext';
 import { translations } from '../../../lib/translations';
@@ -34,7 +34,7 @@ export default function EditProfile() {
   const isArabic = language === 'ar';
   const router = useRouter();
   const [name, setName] = useState(session?.user.name || '');
-  const [email, setEmail] = useState(session?.user.email || '');
+  const [email, setEmail] = useState(session?.user.email || ''); // read-only فقط للعرض
 
   if (!session) {
     return <div style={{ textAlign: 'center', padding: '50px' }}>{t.pleaseSignIn}</div>;
@@ -46,16 +46,14 @@ export default function EditProfile() {
       const response = await fetch('/api/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ name }),
       });
       const data = await response.json();
       if (response.ok) {
-        // تحديث الـ session بالبيانات الجديدة
-        await updateSession({ user: { ...session.user, name, email } });
+        await updateSession({ user: { ...session.user, name } }); // تحديث الجلسة بالاسم فقط
         alert(isArabic ? 'تم تحديث البيانات بنجاح!' : 'Profile updated successfully!');
-        // النقل لصفحة /profile مع refresh
         router.push('/profile');
-        router.refresh(); // refresh عشان نضمن إن الصفحة تتحدث
+        router.refresh();
       } else {
         alert(data.error || (isArabic ? 'فشل في تحديث البيانات' : 'Failed to update profile'));
       }
@@ -83,8 +81,8 @@ export default function EditProfile() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #6B8A6B', fontSize: '0.9em' }}
+              disabled // جعل الحقل read-only
+              style={{ width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #6B8A6B', fontSize: '0.9em', backgroundColor: '#f0f0f0' }}
             />
           </div>
           <button
